@@ -1,0 +1,12 @@
+# Multi-node cluster configuration for CKA preparation
+# 1 Control-Plane Node + 2 Worker Nodes
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP
+  - role: worker
+  - role: worker
