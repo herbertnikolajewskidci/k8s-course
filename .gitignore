@@ -1,0 +1,7 @@
+.DS_Store
+*.pdf
+*.epub
+*.mobi
+.scratch/
+tmp/
+*.log
