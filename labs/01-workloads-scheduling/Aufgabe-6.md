@@ -100,7 +100,6 @@ ls -la
 1. **Static Pod Manifest anlegen:**
 
 ```bash
-# YAML direkt in diesen Ordner generieren / schreiben:
 cat <<EOF > /etc/kubernetes/manifests/my-static-web.yaml
 apiVersion: v1
 kind: Pod
@@ -115,8 +114,22 @@ EOF
 
 1. **Node verlassen (`exit`) und von außen prüfen:**
 
-```bash
-kubectl get pods
-# Der Pod erscheint automatisch mit dem Suffix des Node-Namens:
-# my-static-web-cka-cluster-control-plane
+```text
+❯ k get pods
+NAME                                      READY STATUS  RESTARTS AGE
+my-static-web-cka-cluster-control-plane   1/1   Running 0        7s
 ```
+
+---
+
+## Feedback zu 6.2
+
+### ⭐ 100% Volltreffer
+
+- **Wissensnetz-Erkenntnis:** Das Kubelet auf dem Node überwacht
+  `/etc/kubernetes/manifests` kontinuierlich. Sobald dort eine `.yaml`-Datei
+  hinterlegt wird, startet das Kubelet den Pod direkt lokal und spiegelt ihn
+  über den API-Server als Mirror-Pod wider (erkennbar am Node-Suffix).
+- **Löschen eines Static Pods:** Ein `kubectl delete pod ...` bringt nichts
+  (das Kubelet startet ihn sofort neu!). Man muss die YAML-Datei aus dem
+  Ordner `/etc/kubernetes/manifests` auf dem Node entfernen.
