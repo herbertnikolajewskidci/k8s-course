@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: web-service
+  name: web-service
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: web-service
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: web-service
+    spec:
+      containers:
+        - image: nginx:1.25
+          name: nginx
+          resources: {}
+status: {}
