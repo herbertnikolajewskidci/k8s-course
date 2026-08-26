@@ -13,7 +13,11 @@ learning methodology**:
 2. **Lernberg staging**: Transition smoothly from Tal (concepts & mental models)
    to Hang (hands-on standard tasks) to Gipfel (exam-paced troubleshooting &
    speed drills).
-3. **Ball-im-Tor effect**: Immediate, practical feedback for every lab exercise.
+3. **Ball-im-Tor effect & In-File Reviews**: Immediate, practical feedback for
+   every lab exercise. Whenever Herbert saves task answers or manifests in a
+   file under `labs/`, the agent **MUST append the detailed corrections,
+   explanations, and exam takeaways directly into that same file** under a
+   `## Feedback & Korrekturen` section.
 4. **No Copyright Infringement**: Never commit or extract verbatim copyrighted
    book text or course files into this repository. All materials must be
    original summaries, mental models, YAML manifests, lab steps, and personal
