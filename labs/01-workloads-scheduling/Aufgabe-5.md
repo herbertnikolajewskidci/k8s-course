@@ -4,7 +4,7 @@
    nginx:1.24 und 4 Replikaten.
    Lösung:
    k create deployment web-service --image=nginx:1.24 \
-     --replicas=4 $do > web-service.yaml
+    --replicas=4 $do > web-service.yaml
    k create -f web-service.yaml
 
 1. Aktualisiere das Image des Containers nginx auf nginx:1.25
@@ -64,3 +64,74 @@ REVISION CHANGE-CAUSE
 
 - `k rollout status deployment/web-service` und
   `k rollout history deployment/web-service` sind exakt die CKA-Prüfungsbefehle.
+
+---
+
+## Aufgabe 5.2 (Fehlerhaftes Update & Rollback)
+
+1. Fehler provozieren: Setze das Image auf nginx:1.99.99
+   (erzeugt ImagePullBackOff).
+
+```bash
+k set image deployment/web-service nginx=nginx:1.99.99
+```
+
+```text
+❯ k get pods
+NAME READY STATUS RESTARTS AGE
+web-service-64fd5f9f97-dbzxn 0/1 ImagePullBackOff 0 19s
+web-service-64fd5f9f97-l8fqx 0/1 ImagePullBackOff 0 19s
+web-service-7448d7666-2rqbr 1/1 Running 0 6m55s
+web-service-7448d7666-7mmv6 1/1 Running 0 6m55s
+web-service-7448d7666-qjjkj 1/1 Running 0 6m55s
+```
+
+1. Beobachten: Wie sieht der Output von kubectl rollout status
+   aus?
+
+```text
+❯ k rollout status deployment/web-service
+Waiting for deployment "web-service" rollout to finish:
+2 out of 4 new replicas have been updated...
+```
+
+1. Rollback durchführen: Welcher kubectl rollout-Befehl rollt
+   sofort auf die vorherige funktionierende Revision zurück?
+
+```text
+❯ k rollout undo deployment/web-service
+deployment.apps/web-service rolled back
+```
+
+1. Verifizieren: Zeige, dass wieder alle 4 Pods gesund auf
+   1.25 laufen.
+
+```text
+❯ k rollout status deployment/web-service
+deployment "web-service" successfully rolled out
+```
+
+```text
+❯ k get pods
+NAME READY STATUS RESTARTS AGE
+web-service-7448d7666-2rqbr 1/1 Running 0 8m35s
+web-service-7448d7666-2w68b 1/1 Running 0 23s
+web-service-7448d7666-7mmv6 1/1 Running 0 8m35s
+web-service-7448d7666-qjjkj 1/1 Running 0 8m35s
+```
+
+---
+
+## Feedback zu 5.2
+
+### ⭐ 100% Lehrbuchmäßig gelöst
+
+- **`set image`:** Sofort umgesetzt und perfekt angewendet.
+- **Rollout-Status & MaxUnavailable/MaxSurge:** Sehr gut beobachtet!
+  Kubernetes killt während des Rolling Updates nicht alle alten Pods auf einmal,
+  sondern wartet auf den Erfolg der neuen. Da die neuen im `ImagePullBackOff`
+  waren, blieben alte Pods am Leben.
+- **`rollout undo`:** Exakter CKA-Prüfungsbefehl.
+  - *Profi-Tipp für gezielte Revisionen:*
+    `kubectl rollout undo deployment/web-service --to-revision=1`
+- **Verifikation:** Pods sind sofort wieder 4/4 `Running`.
