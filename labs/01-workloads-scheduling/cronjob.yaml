@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hourly-cleanup
+spec:
+  successfulJobsHistoryLimit: 2
+  jobTemplate:
+    metadata:
+      name: hourly-cleanup
+    spec:
+      template:
+        metadata: {}
+        spec:
+          containers:
+            - command:
+                - echo
+                - Cleanup done
+              image: busybox
+              name: hourly-cleanup
+              resources: {}
+          restartPolicy: OnFailure
+  schedule: 0 * * * *
+status: {}

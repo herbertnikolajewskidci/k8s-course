@@ -70,7 +70,7 @@ Siehe `pod.yaml`
 - **Secret-Volume-Mount:** Absolut fehlerfrei! Die Dateien `DB_USER` und
   `DB_PASS` liegen sauber unter `/etc/secrets/`.
 - **ConfigMap-Env:** Der Wert wurde korrekt aus `app-config` extrahiert.
-  - *Kleines Detail:* In der Aufgabenstellung sollte die Variable im Container
+  - _Kleines Detail:_ In der Aufgabenstellung sollte die Variable im Container
     den Namen **`UI_COLOR`** tragen.
   - In `pod.yaml` stand `env.name: APP_COLOR`.
   - **Unterschied:**
@@ -78,10 +78,10 @@ Siehe `pod.yaml`
     - `configMapKeyRef.key` = Der Key **in der ConfigMap** (`APP_COLOR`)
 
 ```yaml
-      env:
-        - name: UI_COLOR
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: APP_COLOR
+env:
+  - name: UI_COLOR
+    valueFrom:
+      configMapKeyRef:
+        name: app-config
+        key: APP_COLOR
 ```
