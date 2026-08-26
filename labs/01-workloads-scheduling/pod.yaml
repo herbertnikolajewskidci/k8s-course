@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: secure-web
+  name: secure-web
+spec:
+  volumes:
+    - name: secret-vol
+      secret:
+        secretName: db-credentials
+  containers:
+    - image: nginx:alpine
+      name: secure-web
+      volumeMounts:
+        - name: secret-vol
+          mountPath: "/etc/secrets"
+          readOnly: true
+      env:
+        - name: APP_COLOR
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: APP_COLOR
+      resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
