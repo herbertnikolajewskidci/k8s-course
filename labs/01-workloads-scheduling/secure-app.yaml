@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: secure-app
+  name: secure-app
+spec:
+  tolerations:
+    - key: "app"
+      operator: "Equal"
+      value: "restriced"
+      effect: "NoSchedule"
+  containers:
+    - image: nginx:alpine
+      name: secure-app
+      resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
