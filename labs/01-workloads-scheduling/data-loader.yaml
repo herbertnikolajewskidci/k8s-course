@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: data-loader
+  name: data-loader
+spec:
+  containers:
+    - name: app
+      command:
+        - sleep
+        - "3600"
+      image: busybox
+  initContainers:
+    - name: setup
+      command:
+        - touch
+        - /data/ready.txt
+      image: busybox
+      resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+  emptyDir: {}
+  filePath: /data
+status: {}
