@@ -27,6 +27,18 @@ learning methodology**:
    original summaries, mental models, YAML manifests, lab steps, and personal
    learning records.
 
+## Session Startup Protocol (Autonomous Context Recovery)
+
+At the beginning of **EVERY new chat session or when Herbert enters**, the
+agent **MUST automatically**:
+
+1. Check current git branch and status (`git branch --show-current`,
+   `git status`).
+2. Query open learning issues via GitHub CLI (`gh issue list --state open`).
+3. Read the latest learning record under `learning-records/`.
+4. Greet Herbert by directly stating the active issue, the current learning
+   branch, and the immediate next task/lab file without asking for context.
+
 ## Branching & Tagging Strategy
 
 Each learning day operates on its own dedicated feature branch and gets tagged
