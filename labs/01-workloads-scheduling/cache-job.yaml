@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cache-warmup
+  namespace: prod-system
+spec:
+  completions: 1
+  template:
+    metadata: {}
+    spec:
+      containers:
+        - command:
+            - echo
+            - "Cache is warm"
+          image: busybox
+          name: cache-warmup
+          resources: {}
+      restartPolicy: Never
+status: {}
