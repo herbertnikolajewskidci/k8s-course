@@ -18,7 +18,11 @@ learning methodology**:
    file under `labs/`, the agent **MUST append the detailed corrections,
    explanations, and exam takeaways directly into that same file** under a
    `## Feedback & Korrekturen` section.
-4. **No Copyright Infringement**: Never commit or extract verbatim copyrighted
+4. **Documentation & Keyword Strategy**: For every lab task, provide the
+   exact **search keywords** for `kubernetes.io/docs/` and the matching
+   **`kubectl explain`** in-terminal shortcuts, training Herbert to locate
+   valid YAML snippets and syntax in seconds during the exam.
+5. **No Copyright Infringement**: Never commit or extract verbatim copyrighted
    book text or course files into this repository. All materials must be
    original summaries, mental models, YAML manifests, lab steps, and personal
    learning records.
