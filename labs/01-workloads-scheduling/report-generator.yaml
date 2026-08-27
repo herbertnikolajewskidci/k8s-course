@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report-generator
+  namespace: drill-workloads
+spec:
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      name: report-generator
+
+    spec:
+      template:
+        metadata: {}
+        spec:
+          activeDeadlineSeconds: 30
+          containers:
+            - command:
+                - echo
+                - Report generated
+              image: busybox
+              name: report-generator
+              resources: {}
+          restartPolicy: OnFailure
+  schedule: "*/15 * * * *"
+status: {}

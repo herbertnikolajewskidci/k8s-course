@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: cluster-agent
+  name: cluster-agent
+spec:
+  selector:
+    matchLabels:
+      app: cluster-agent
+  template:
+    metadata:
+      labels:
+        app: cluster-agent
+    spec:
+      tolerations:
+        - operator: Exists
+      containers:
+        - command:
+            - sleep
+            - "3600"
+          image: busybox
+          name: busybox
+          resources: {}
+status: {}
