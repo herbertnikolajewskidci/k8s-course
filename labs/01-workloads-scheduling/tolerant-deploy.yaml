@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: tolerant-deploy
+  name: tolerant-deploy
+  namespace: drill-workloads
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tolerant-deploy
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: tolerant-deploy
+    spec:
+      tolerations:
+        - key: "tier"
+          operator: "Equal"
+          value: "special"
+          effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - cka-cluster-worker
+      containers:
+        - image: redis:alpine
+          name: redis
+          resources: {}
+status: {}

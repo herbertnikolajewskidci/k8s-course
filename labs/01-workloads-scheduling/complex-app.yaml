@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: complex-app
+  name: complex-app
+  namespace: drill-workloads
+spec:
+  volumes:
+    - name: workdir-vol
+      emptyDir: {}
+    - name: db-secret-vol
+      secret:
+        secretName: db-secret
+
+  initContainers:
+    - image: busybox
+      name: init-sys
+      command: ["sh", "-c", "echo Initialized > /work/status.txt"]
+      volumeMounts:
+        - name: workdir-vol
+          mountPath: /work
+    - image: busybox
+      name: log-agent
+      restartPolicy: Always
+      command: ["sleep", "3600"]
+      volumeMounts:
+        - name: db-secret-vol
+          readOnly: true
+          mountPath: /etc/api-keys
+        - name: workdir-vol
+          mountPath: /work
+  containers:
+    - image: nginx:alpine
+      name: web-app
+      resources: {}
+      env:
+        - name: APP_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: LOG_LEVEL
+      volumeMounts:
+        - name: workdir-vol
+          mountPath: /work
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
