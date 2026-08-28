@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: service-red
+  name: red-svc
+  namespace: ingress-lab
+spec:
+  ports:
+    - name: "80"
+      port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app: service-red
+  type: ClusterIP
+status:
+  loadBalancer: {}

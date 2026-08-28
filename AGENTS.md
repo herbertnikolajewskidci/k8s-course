@@ -52,6 +52,18 @@ upon completion:
   2. Merge via PR or rebase into `main` at the end of the day.
   3. Create an annotated Git tag for the completed milestone.
 
+## Local Environment & Architecture (Apple Silicon / ARM64)
+
+Herbert trains locally on **macOS Apple Silicon (ARM64)**:
+
+- **Legacy Image Incompatibility:** Never enforce or prescribe legacy images
+  that crash on ARM64 (e.g. `busybox:1.28` causes `SIGSEGV` on macOS).
+- **ARM64-Safe Debug Images:** Always use or suggest `curlimages/curl`,
+  `busybox:latest`, `registry.k8s.io/busybox:1.27.2`, or `nicolaka/netshoot`.
+- **Exam vs. Local Context:** Whenever an exam-standard image (like
+  `busybox:1.28` from official docs) is mentioned, explicitly annotate that
+  for local macOS testing an ARM64-compatible image should be used.
+
 ## Agent Skills
 
 ### Issue tracker
