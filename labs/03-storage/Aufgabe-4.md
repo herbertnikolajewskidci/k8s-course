@@ -168,24 +168,70 @@ EOF
 
 ```bash
 # Setup-Befehle
+Einfach C&P
 ```
 
 ### Lösung 4.1: PVC Mismatch behoben
 
 ```bash
 # Diagnose-Notizen & angepasster PVC
+'''
+Beim PVC waren Capacity und AccessModes unpassend:
+Im fehlerhaften PVC war ReadWriteMany und 5Gi definiert,
+während das PV nur ReadWriteOnce und 2Gi bereitstellt.
+'''
+
+cat pvc-working-match.yaml
+
+'''
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-broken-match
+  namespace: storage-troubleshoot-lab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: manual-trouble
+'''
+k -n storage-troubleshoot-lab delete pvc pvc-broken-match
+
+k apply -f pvc-working-match.yaml
+
+k -n storage-troubleshoot-lab get pvc pvc-broken-match
+'''
+NAME              STATUS  VOLUME           CAPACITY  ACCESS  STORAGECLASS
+pvc-broken-match  Bound   pv-broken-match  2Gi       RWO     manual-trouble
+'''
 ```
 
 ### Lösung 4.2: Pod Mount-Fehler behoben
 
 ```bash
 # Diagnose & Pod-Reparatur
+'''
+Fehlerursache: Tippfehler im Pod-Manifest (claimName: pvc-app-datasss
+statt pvc-app-data). Pod exportiert, claimName korrigiert und neu
+angewendet -> Pod läuft erfolgreich im Status Running.
+'''
 ```
 
 ### Lösung 4.3: Terminating PVC & Finalizer Beobachtung
 
 ```bash
 # Notizen zu Terminating, Finalizer und sauberer Löschung
+kubernetes.io/pvc-protection
+'''
+Beobachtung: Der PVC blieb im Status Terminating hängen. Im describe
+sieht man den Finalizer 'kubernetes.io/pvc-protection'. Solange ein Pod
+das Volume aktiv nutzt, verhindert Kubernetes die physische Löschung,
+um Datenverlust zu vermeiden.
+Sobald der Pod beendet wird, entfernt Kubernetes den Finalizer und der
+PVC wird automatisch gelöscht.
+'''
 ```
 
 ---
@@ -206,5 +252,47 @@ Falls du während der Bearbeitung nachschlagen möchtest:
 
 ## 5. Feedback & Korrekturen
 
-Noch keine Einreichung vorhanden.
-Nach deiner Bearbeitung folgt hier das direkte Review.
+### 🌟 Ball-im-Tor: Volle Punktzahl (100% / Note 1+)
+
+Grandioser Abschluss von Domäne 3! Du hast alle drei Troubleshooting-Muster
+präzise diagnostiziert, verstanden und sauber gelöst.
+
+1. **Aufgabe 4.1 (PVC Mismatch Drill):**
+   - **Diagnose:** Zielsicher beide Diskrepanzen (`ReadWriteMany` vs.
+     `ReadWriteOnce` und `5Gi` vs. `2Gi`) identifiziert.
+   - **Reparatur:** Sauberes Manifest `pvc-working-match.yaml` erstellt und
+     die Bindung zum PV erfolgreich hergestellt.
+2. **Aufgabe 4.2 (Pod Stuck in ContainerCreating Drill):**
+   - **Diagnose:** Den Typo im Volume-Referenznamen (`pvc-app-datasss`)
+     identifiziert.
+   - **Reparatur:** Pod neu konfiguriert und auf `Running` gebracht.
+3. **Aufgabe 4.3 (Terminating Freeze & Finalizer):**
+   - **Mentales Modell:** Den Schutzmechanismus `kubernetes.io/pvc-protection`
+     präzise und treffend formuliert.
+   - **Lifecycle-Verhalten:** Live nachvollzogen, wie Kubernetes den Finalizer
+     erst nach dem Stoppen des Pods auflöst.
+
+---
+
+### 💡 CKA-Prüfungs-Takeaways zu Storage-Troubleshooting
+
+1. **`kubectl describe pvc` ist immer der 1. Schritt bei `Pending` PVCs:**
+   Die Fehlermeldung unter `Events` sagt dir direkt, ob Kapazität, AccessMode
+   oder StorageClass nicht passen.
+2. **`FailedMount` im Pod:**
+   Immer die Schreibweise von `spec.volumes[*].persistentVolumeClaim.claimName`
+   mit den vorhandenen PVCs im selben Namespace abgleichen.
+3. **`Terminating` bei PVC oder PV:**
+   Keine Panik – das Objekt wartet nur darauf, dass der Consumer-Pod bzw.
+   der Claim gelöscht wird.
+
+---
+
+### 🏆 Domäne 3: Storage (10%) — Vollständig gemeistert
+
+Damit hast du alle 4 Kernblöcke von Domäne 3 erfolgreich abgeschlossen:
+
+- **Block 1:** Statische PV & PVC Bindung (Kapazitäten & AccessModes)
+- **Block 2:** StorageClasses & Dynamic Provisioning (WaitForFirstConsumer)
+- **Block 3:** Pods mit Volumes, Persistenz-Nachweis & Read-Only Mounts
+- **Block 4:** Storage Troubleshooting Drill (Mismatch, MountFailed & Finalizer)

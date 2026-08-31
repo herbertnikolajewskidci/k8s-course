@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: secure-reader
+  name: secure-reader
+  namespace: storage-lab
+spec:
+  volumes:
+    - name: pvc-shared-volume
+      persistentVolumeClaim:
+        claimName: pvc-shared
+  containers:
+    - command:
+        - sleep
+        - "3600"
+      image: busybox:latest
+      name: secure-reader
+      resources: {}
+      volumeMounts:
+        - mountPath: "/data/readonly"
+          name: pvc-shared-volume
+          readOnly: true
+
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}

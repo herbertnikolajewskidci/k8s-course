@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: reader-pod
+  name: reader-pod
+  namespace: storage-lab
+spec:
+  volumes:
+    - name: pvc-shared-volume
+      persistentVolumeClaim:
+        claimName: pvc-shared
+  containers:
+    - command:
+        - sleep
+        - "3600"
+      image: busybox:latest
+      name: reader-pod
+      resources: {}
+      volumeMounts:
+        - mountPath: "/data/shared"
+          name: pvc-shared-volume
+
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}

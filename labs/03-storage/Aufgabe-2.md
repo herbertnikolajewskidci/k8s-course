@@ -102,36 +102,66 @@ Erstelle ein Manifest `pvc-dynamic.yaml` im Namespace `storage-lab`:
 
 ```yaml
 # sc-fast.yaml
+siehe Datei
 ```
 
 ```bash
 # Verifizierungsbefehle
+k get sc
+'''
+NAME                PROVISIONER            RECLAIM  BINDINGMODE
+sc-fast             rancher.io/local-path  Retain   WaitForFirstConsumer
+standard (default)  rancher.io/local-path  Delete   WaitForFirstConsumer
+'''
 ```
 
 ### Lösung 2.2: Dynamischer PVC
 
 ```yaml
 # pvc-dynamic.yaml
+Siehe datei
 ```
 
 ```bash
 # Verifizierungsbefehle
+k -n storage-lab get pvc pvc-dynamic
+'''
+NAME         STATUS   VOLUME  CAPACITY  ACCESS  STORAGECLASS
+pvc-dynamic  Pending                    RWO     sc-fast
+'''
 ```
 
 ### Lösung 2.3: Beobachtung & Notizen
 
 ```bash
 # Notizen zu Status & WaitForFirstConsumer
+'''
+Ja noch Pending, weil bei der StorageClass WaitForFirstConsumer
+für den VolumeBindingMode definiert ist.
+'''
 ```
 
 ### Lösung 2.4: Pod-Manifest & Dynamische Bindung
 
 ```yaml
 # dynamic-app.yaml oder kubectl run Befehl
+siehe Datei
 ```
 
-```bash
+```text
 # Ausgabe von get pod,pvc,pv
+NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE
+sc-fast              rancher.io/local-path   Retain          WaitForFirstConsumer
+standard (default)   rancher.io/local-path   Delete          WaitForFirstConsumer
+
+NAME            STATUS    VOLUME                                     CAPACITY
+pvc-dynamic     Bound     pvc-2c1ac7c1-1dd6-48e8-8b27-da91e4f5f134   250Mi
+
+NAME          READY   STATUS    RESTARTS   AGE
+dynamic-app   1/1     Running   0          114s
+
+NAME                                       CAPACITY   ACCESS   STATUS   CLAIM
+pvc-2c1ac7c1-1dd6-48e8-8b27-da91e4f5f134   250Mi      RWO      Bound    pvc-dynamic
 ```
 
 ---
@@ -152,5 +182,38 @@ Falls du während der Bearbeitung nachschlagen möchtest:
 
 ## 5. Feedback & Korrekturen
 
-Noch keine Einreichung vorhanden.
-Nach deiner Bearbeitung folgt hier das direkte Review.
+### 🌟 Ball-im-Tor: Volle Punktzahl (100% / Note 1+)
+
+Hervorragend umgesetzt! Der gesamte Ablauf des dynamischen Provisionings wurde
+von der StorageClass über den Claim bis zum Pod fehlerfrei durchdekliniert.
+
+1. **Aufgabe 2.1 (StorageClass):**
+   - `provisioner: rancher.io/local-path` und
+     `volumeBindingMode: WaitForFirstConsumer` sauber deklariert.
+2. **Aufgabe 2.2 (Dynamischer PVC):**
+   - `storageClassName: sc-fast` mit 250Mi RWO exakt aufgesetzt.
+3. **Aufgabe 2.3 (Pending-Analyse):**
+   - Präzise begründet: Der PVC wartet wegen `WaitForFirstConsumer` bewusst auf
+     den ersten Consumer-Pod.
+4. **Aufgabe 2.4 (Pod & Live-Bindung):**
+   - `dynamic-app.yaml` verbindet Pod-Volume und Container `volumeMounts`
+     lehrbuchmäßig.
+   - Die automatische PV-Generierung (`pvc-2c1ac...`) und der Statuswechsel
+     zu `Bound` wurden live im Terminal beobachtet.
+
+---
+
+### 💡 CKA-Prüfungs-Takeaways zu StorageClasses
+
+- **`volumeBindingMode: WaitForFirstConsumer`**:
+  Verhindert Scheduling-Konflikte (besonders bei lokalem Node-Storage oder
+  Cloud-Volumes in bestimmten Availability Zones).
+- **Default StorageClass:**
+  Wenn ein PVC **keine** `storageClassName` angibt, wählt Kubernetes
+  automatisch die Default-StorageClass (Annotation:
+  `storageclass.kubernetes.io/is-default-class: "true"`).
+- **Statisches Matching vs. Dynamic:**
+  - `storageClassName: ""` (leerer String) = Deaktiviert Dynamic Provisioning
+    und zwingt Kubernetes, ein statisches PV ohne StorageClass zu binden.
+  - `storageClassName: <name>` = Sucht nach passendem PV oder triggert den
+    Provisioner dieser StorageClass.

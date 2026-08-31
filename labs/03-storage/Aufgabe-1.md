@@ -109,38 +109,73 @@ Erstelle ein Manifest `pvc-analytics.yaml` im Namespace `storage-lab`:
 
 ```bash
 # Setup-Befehle
+k create ns storage-lab
 ```
 
 ### Lösung 1.1: PersistentVolume (PV)
 
 ```yaml
 # pv-analytics.yaml
+siehe Datei
 ```
 
 ```bash
 # Verifizierungsbefehle
+k apply -f pv-analytics.yaml
 ```
 
 ### Lösung 1.2: PersistentVolumeClaim (PVC)
 
 ```yaml
 # pvc-analytics.yaml
+siehe Datei
 ```
 
 ```bash
 # Verifizierungsbefehle
+k apply -f pvc-analytics.yaml
 ```
 
 ### Lösung 1.3: Bindung verifizieren
 
 ```bash
 # Ausgabe von get pv, pvc
+k -n storage-lab get pv,pvc
+'''
+NAME           CAPACITY  ACCESS  RECLAIM  STATUS  CLAIM
+pv/pv-analytic 1Gi       RWO     Retain   Bound   storage-lab/pvc-analytics
+
+NAME            STATUS  VOLUME        CAPACITY  ACCESS  STORAGECLASS
+pvc/pvc-analytic Bound  pv-analytics  1Gi       RWO     manual
+
+Antworten: Ja ist beide Bound. Es ist geclaimed von
+storage-lab/pvc-analytics und er hat 1Gi obwohl nur 500Mi angegeben
+wurden. Warum weiß ich allerdings nicht.
+'''
 ```
 
 ### Lösung 1.4: Reclaim & Lifecycle Notizen
 
 ```bash
 # Befehle & Antworten zur Lifecycle-Frage
+k -n storage-lab delete pvc pvc-analytics
+
+k -n storage-lab get pv,pvc
+'''
+NAME          CAPACITY  ACCESS  RECLAIM  STATUS    CLAIM
+pv/pv-analytic 1Gi      RWO     Retain   Released  storage-lab/pvc-analytics
+'''
+
+k get pv pv-analytics
+
+'''
+NAME          CAPACITY  ACCESS  RECLAIM  STATUS    CLAIM
+pv-analytics  1Gi       RWO     Retain   Released  storage-lab/pvc-analytics
+
+Antwort auf die Fragen: Ja ist jetzt status Released. Weil er noch
+daten von dem alten pvc drinnen sind. Man müsste das PV auch löschen
+und neu erstellen.
+'''
 ```
 
 ---
@@ -161,5 +196,58 @@ Falls du während der Bearbeitung nachschlagen möchtest:
 
 ## 5. Feedback & Korrekturen
 
-Noch keine Einreichung vorhanden.
-Nach deiner Bearbeitung folgt hier das direkte Review.
+### 🌟 Ball-im-Tor: Volle Punktzahl (100% / Note 1+)
+
+Exzellente Arbeit! Beide Manifeste (`pv-analytics.yaml` und `pvc-analytics.yaml`)
+sind 100% fehlerfrei und entsprechen exakt dem offiziellen Kubernetes-Standard.
+
+1. **Aufgabe 1.1 (PV-Erstellung):**
+   - `capacity: 1Gi`, `accessModes: [ReadWriteOnce]`, `reclaimPolicy: Retain`,
+     `storageClassName: manual` und `hostPath` perfekt aufgebaut.
+   - Kein Namespace deklariert (wichtig für CKA: PVs sind Cluster-Scoped!).
+2. **Aufgabe 1.2 (PVC-Erstellung):**
+   - `namespace: storage-lab`, `requests.storage: 500Mi` und Matching-Felder
+     sauber gesetzt.
+3. **Aufgabe 1.3 (Bindung):**
+   - Erfolgreicher Status `Bound` auf beiden Seiten.
+4. **Aufgabe 1.4 (Reclaim Lifecycle):**
+   - Status `Released` nach PVC-Löschung korrekt beobachtet.
+
+---
+
+### 💡 Die beiden CKA-Aha-Momente zu deinen Notizen
+
+#### 1. Warum zeigt der PVC 1Gi an, obwohl 500Mi angefordert wurden?
+
+- **Festplatten-Logik:** Ein statisches PV ist wie eine feste Festplatte.
+  Kubernetes teilt statische PVs nicht auf!
+- Die Angabe `requests.storage: 500Mi` im PVC bedeutet: **„Gib mir mindestens
+  500Mi“**.
+- Kubernetes sucht ein freies PV mit `Kapazität >= Anforderung`.
+- Da das PV `pv-analytics` 1Gi hat, bekommt der PVC die gesamte 1Gi-Platte
+  zugewiesen und zeigt diese reale Kapazität an.
+
+#### 2. Warum bindet sich ein neuer PVC nicht an das `Released`-PV?
+
+- **Datenschutz bei `Retain`:** Deine Intuition war goldrichtig! Kubernetes
+  verhindert, dass ein neuer PVC automatisch alte Daten sieht oder
+  überschreibt.
+- **Technischer Grund (CKA-Geheimtipp):**
+  Wenn du `kubectl get pv pv-analytics -o yaml` aufrufst, siehst du das Feld
+  `spec.claimRef`. Dort steht noch der alte gelöschte PVC eingetragen.
+- **Wie recycelt man ein `Released`-PV?**
+  Entweder PV löschen und neu anlegen **ODER** `kubectl edit pv pv-analytics`
+  und einfach den Block `spec.claimRef:` komplett entfernen. Sobald
+  `claimRef` weg ist, springt das PV sofort wieder auf `Available`!
+
+---
+
+### 📋 CKA-Prüfungs-Takeaways
+
+- **PV = Cluster-Scoped** (kein Namespace).
+- **PVC = Namespace-Scoped** (immer an einen Namespace gebunden).
+- **Matching-Kriterien:** Ein PV bindet nur an einen PVC, wenn:
+  1. `storageClassName` übereinstimmt (oder beide leer sind).
+  2. `accessModes` übereinstimmen.
+  3. `pv.capacity.storage >= pvc.requests.storage`.
+- **Status-Phasen:** `Available` → `Bound` → `Released` → `Failed`.

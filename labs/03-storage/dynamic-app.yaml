@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: dynamic-app
+  name: dynamic-app
+  namespace: storage-lab
+spec:
+  volumes:
+    - name: dynamic-volume
+      persistentVolumeClaim:
+        claimName: pvc-dynamic
+  containers:
+    - image: nginx:alpine
+      name: dynamic-app
+      resources: {}
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: dynamic-volume
+
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}

@@ -109,40 +109,93 @@ AccessMode: `ReadWriteOnce`, StorageClass: `sc-fast`).
 
 ```yaml
 # pvc-shared.yaml
+siehe Datei
 ```
 
 ```bash
 # Verifizierungsbefehle
+k -n storage-lab get pvc pvc-shared
+'''
+NAME        STATUS   VOLUME  CAPACITY  ACCESS  STORAGECLASS
+pvc-shared  Pending                    RWO     sc-fast
+'''
 ```
 
 ### Lösung 3.1: Writer-Pod
 
 ```yaml
 # writer-pod.yaml
+Siehe Dateien
 ```
 
 ```bash
 # Verifizierungsbefehle
+
+kubectl exec -n storage-lab writer-pod -- cat /data/shared/status.log
+Mon Aug 31 14:41:53 UTC 2026
+Mon Aug 31 14:41:54 UTC 2026
+Mon Aug 31 14:41:55 UTC 2026
+Mon Aug 31 14:41:56 UTC 2026
+Mon Aug 31 14:41:57 UTC 2026
+Mon Aug 31 14:41:58 UTC 2026
+Mon Aug 31 14:41:59 UTC 2026
+Mon Aug 31 14:42:00 UTC 2026
+
 ```
 
 ### Lösung 3.2: Persistenz-Nachweis mit Reader-Pod
 
 ```yaml
 # reader-pod.yaml
+siehe Dateien
 ```
 
 ```bash
 # Verifizierungsbefehle & Log-Ausgabe
+
+kubectl exec -n storage-lab reader-pod -- cat /data/shared/status.log
+Mon Aug 31 14:41:53 UTC 2026
+Mon Aug 31 14:41:54 UTC 2026
+Mon Aug 31 14:41:55 UTC 2026
+Mon Aug 31 14:41:56 UTC 2026
+Mon Aug 31 14:41:57 UTC 2026
+Mon Aug 31 14:41:58 UTC 2026
+Mon Aug 31 14:41:59 UTC 2026
+Mon Aug 31 14:42:00 UTC 2026
 ```
 
 ### Lösung 3.3: Read-Only Mount & Sicherheits-Test
 
 ```yaml
 # secure-reader.yaml
+siehe Datei
 ```
 
 ```bash
 # Test-Befehle (Lesen OK, Schreiben scheitert)
+kubectl exec -n storage-lab secure-reader -- cat /data/readonly/status.log
+Mon Aug 31 14:41:53 UTC 2026
+Mon Aug 31 14:41:54 UTC 2026
+Mon Aug 31 14:41:55 UTC 2026
+Mon Aug 31 14:41:56 UTC 2026
+Mon Aug 31 14:41:57 UTC 2026
+Mon Aug 31 14:41:58 UTC 2026
+Mon Aug 31 14:41:59 UTC 2026
+Mon Aug 31 14:42:00 UTC 2026
+Mon Aug 31 14:42:01 UTC 2026
+Mon Aug 31 14:42:02 UTC 2026
+Mon Aug 31 14:42:03 UTC 2026
+Mon Aug 31 14:42:04 UTC 2026
+Mon Aug 31 14:42:05 UTC 2026
+Mon Aug 31 14:42:06 UTC 2026
+Mon Aug 31 14:42:07 UTC 2026
+Mon Aug 31 14:42:08 UTC 2026
+
+
+kubectl exec -n storage-lab secure-reader -- touch /data/readonly/test.txt
+touch: /data/readonly/test.txt: Read-only file system
+command terminated with exit code 1
+
 ```
 
 ---
@@ -164,5 +217,40 @@ Falls du während der Bearbeitung nachschlagen möchtest:
 
 ## 5. Feedback & Korrekturen
 
-Noch keine Einreichung vorhanden.
-Nach deiner Bearbeitung folgt hier das direkte Review.
+### 🌟 Ball-im-Tor: Volle Punktzahl (100% / Note 1+)
+
+Absolute Spitzenleistung! Alle drei Aufgaben wurden inklusive der geforderten
+Verifizierungen und Fehlerzustände fehlerfrei und mustergültig gelöst.
+
+1. **Vorbereitung & Aufgabe 3.1 (Writer-Pod & PVC):**
+   - `pvc-shared.yaml` und `writer-pod.yaml` sind formal und syntaktisch
+     perfekt aufgebaut.
+   - Der Dateischreibprozess (`date >> /data/shared/status.log`) lief sauber.
+2. **Aufgabe 3.2 (Persistenz-Nachweis):**
+   - Nach dem Löschen von `writer-pod` konnte der neue `reader-pod` sofort auf
+     alle zuvor geschriebenen Daten auf dem PVC zugreifen.
+   - Damit ist das fundamentale Konzept der Kubernetes-Speicherpersistenz
+     erfolgreich nachgewiesen.
+3. **Aufgabe 3.3 (Read-Only Mount & Integrity Check):**
+   - `volumeMounts[0].readOnly: true` wurde in `secure-reader.yaml` exakt an
+     der richtigen Stelle deklariert.
+   - Der Verifikationstest (`touch: Read-only file system`) beweist das
+     erfolgreiche Durchgreifen der Berechtigungseinschränkung auf Container-
+     Ebene.
+
+---
+
+### 💡 CKA-Prüfungs-Takeaways
+
+- **2-Stufen-Muster:**
+  1. `spec.volumes[*]` definiert die Speicherquelle (PVC, ConfigMap, Secret,
+     emptyDir) auf Pod-Ebene.
+  2. `spec.containers[*].volumeMounts[*]` bindet das Volume in den Dateibaum
+     des Containers ein.
+- **`readOnly` Deklaration:**
+  Wird immer im **`volumeMounts`**-Block des jeweiligen Containers gesetzt,
+  **nicht** unter `spec.volumes`!
+- **Daten-Lebenszyklus:**
+  Pods sind flüchtig, PVCs/PVs sind langlebig. Das Entkoppeln von Compute
+  (Pod) und Storage (PVC) ist das Herzstück von Stateful Workloads in
+  Kubernetes.
