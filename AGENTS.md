@@ -41,16 +41,21 @@ agent **MUST automatically**:
 
 ## Branching & Tagging Strategy
 
-Each learning day operates on its own dedicated feature branch and gets tagged
+Each CKA domain operates on its own dedicated feature branch and gets tagged
 upon completion:
 
-- **Branch naming**: `day-01-workloads-scheduling`,
-  `day-02-services-networking`, etc.
-- **Milestone Tags**: `v-day-01-complete`, `v-day-02-complete`, etc.
+- **Branch naming**:
+  - `domain-01-workloads-scheduling`
+  - `domain-02-services-networking`
+  - `domain-03-storage`
+  - `domain-04-cluster-architecture`
+  - `domain-05-troubleshooting`
+- **Milestone Tags**: `v-domain-01-complete`, `v-domain-02-complete`,
+  `v-domain-03-complete`, etc.
 - **Workflow**:
-  1. Work and commit on the current day's branch.
-  2. Merge via PR or rebase into `main` at the end of the day.
-  3. Create an annotated Git tag for the completed milestone.
+  1. Work and commit on the active domain branch.
+  2. Merge into `main` upon domain completion.
+  3. Create an annotated Git tag for the completed domain milestone.
 
 ## Local Environment & Architecture (Apple Silicon / ARM64)
 
