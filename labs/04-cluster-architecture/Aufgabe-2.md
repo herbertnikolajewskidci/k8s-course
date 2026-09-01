@@ -124,7 +124,7 @@ Jetzt soll der Worker Node ohne Downtime für Workloads aktualisiert werden.
    - Entsperre `kubelet` & `kubectl`, installiere Version `1.31.1-1.1` und sperre
      beide wieder.
    - Starte den Kubelet-Dienst neu (`systemctl daemon-reload &&
-     systemctl restart kubelet`).
+systemctl restart kubelet`).
 3. **Wieder vom Master (`cka-master`) aus:**
    - Schalte die Node wieder frei mit `kubectl uncordon cka-worker1`.
    - Prüfe den Gesamtstatus des Clusters (`kubectl get nodes -o wide`). Alle
@@ -152,25 +152,129 @@ Downtime für bestehende Deployments erfolgen.
 
 ```bash
 # Deine Befehle / Notizen
+orb -m cka-master
+sudo apt-get update
 
+apt-cache madison kubeadm
+
+sudo apt-mark unhold kubeadm
+# Canceled hold on kubeadm.
+
+sudo apt-get install kubeadm=1.31.1-1.1
+
+sudo apt-mark hold kubeadm
+# kubeadm set on hold.
 ```
 
 ### Lösung 2.2
 
 ```bash
 # Deine Befehle / Notizen
+herbertnikolajewski@cka-master:~$ sudo kubeadm upgrade plan
+# [preflight] Running pre-flight checks.
+# [upgrade/config] Reading configuration from the cluster...
+# [upgrade] Running cluster health checks
+# [upgrade/versions] Cluster version: 1.31.0
+# [upgrade/versions] kubeadm version: v1.31.1
+# [upgrade/versions] Target version: v1.31.14
+
+sudo kubeadm upgrade apply v1.31.1 -y
+# [upgrade/successful] SUCCESS! Your cluster was upgraded to "v1.31.1".
+# [upgrade/kubelet] Now that your control plane is upgraded...
+
+k get nodes
+# NAME          STATUS   ROLES           AGE   VERSION
+# cka-master    Ready    control-plane   37m   v1.31.0
+# cka-worker1   Ready    <none>          36m   v1.31.0
+
+# Weil Kubelet und kubectl noch aktualisiert werden müssen,
+# zeigt es noch die alte Version an.
 ```
 
 ### Lösung 2.3
 
 ```bash
 # Deine Befehle / Notizen
+
+sudo apt-mark unhold kubelet
+sudo apt-mark unhold kubectl
+
+sudo apt-get install kubelet=1.31.1-1.1 -y
+sudo apt-get install kubectl=1.31.1-1.1 -y
+
+sudo apt-mark hold kubelet
+sudo apt-mark hold kubectl
+
+sudo systemctl restart kubelet
+
+k get nodes -o wide
+# NAME         STATUS   ROLES           AGE   VERSION   CONTAINER-RUNTIME
+# cka-master   Ready    control-plane   48m   v1.31.1   containerd://2.2.1
+# cka-worker1  Ready    <none>          48m   v1.31.0   containerd://2.2.1
 ```
 
 ### Lösung 2.4
 
 ```bash
 # Deine Befehle / Notizen
+
+k drain cka-worker1 --ignore-daemonsets --force
+# node/cka-worker1 cordoned
+# Warning: ignoring DaemonSet-managed Pods...
+# evicting pod kube-system/coredns-...
+# node/cka-worker1 drained
+
+k get nodes
+# NAME          STATUS                     ROLES           AGE   VERSION
+# cka-master    Ready                      control-plane   60m   v1.31.1
+# cka-worker1   Ready,SchedulingDisabled   <none>          59m   v1.31.0
+
+herbertnikolajewski@cka-worker1:~$ sudo apt-mark unhold kubeadm
+# Canceled hold on kubeadm.
+
+sudo apt-get install kubeadm=1.31.1-1.1 -y
+
+sudo apt-mark hold kubeadm
+
+sudo kubeadm upgrade node
+# [upgrade] Reading configuration from the cluster...
+# [upgrade] The configuration for this node was successfully updated!
+
+sudo apt-mark unhold kubelet
+sudo apt-mark unhold kubectl
+
+sudo apt-get install kubectl=1.31.1-1.1 -y
+sudo apt-get install kubelet=1.31.1-1.1 -y
+
+sudo apt-mark hold kubelet
+sudo apt-mark hold kubectl
+
+sudo systemctl restart kubelet
+
+kubectl uncordon cka-worker1
+# node/cka-worker1 uncordoned
+
+herbertnikolajewski@cka-master:~$ k get nodes -o wide
+# NAME         STATUS   ROLES           AGE    VERSION   CONTAINER-RUNTIME
+# cka-master   Ready    control-plane   102m   v1.31.1   containerd://2.2.1
+# cka-worker1  Ready    <none>          101m   v1.31.1   containerd://2.2.1
+
+# node01:
+# auf dem control-plane:
+# k drain node01 --ignore-daemonsets --force
+# auf dem worker node01:
+# sudo apt-get update
+# sudo apt-mark unhold kubeadm
+# sudo apt-get install kubeadm=1.31.1-1.1 -y
+# sudo apt-mark hold kubeadm
+# sudo kubeadm upgrade node
+# sudo apt-mark unhold kubectl kubelet
+# sudo apt-get install kubectl=1.31.1-1.1 kubelet=1.31.1-1.1 -y
+# sudo apt-mark hold kubectl kubelet
+# sudo systemctl restart kubelet
+# auf dem control-plane wieder:
+# k uncordon node01
+# k get nodes -o wide
 ```
 
 ---
@@ -196,5 +300,64 @@ Falls du während der Bearbeitung nachschlagen möchtest:
 
 ## 5. Feedback & Korrekturen
 
-Noch keine Einreichung vorhanden.
-Nach deiner Bearbeitung folgt hier das direkte Review.
+### Review zu Block 2: kubeadm Cluster Upgrade
+
+Fantastische Leistung! Du hast das komplette Upgrade von `v1.31.0` auf
+`v1.31.1` live auf echten Ubuntu 24.04 Linux-VMs mit `apt`, `systemctl`,
+`kubeadm` und `kubectl` erfolgreich durchgespielt und beide Nodes sauber in den
+Zielzustand (`Ready`, `v1.31.1`) gebracht.
+
+---
+
+### Detaillierte Analyse & Feinheiten
+
+#### 1. Aufgabe 2.1 (Vorbereitung & Paketmanagement Master)
+
+- **Umsetzung:** `apt update`, `apt-cache madison kubeadm`, `apt-mark unhold`,
+  gezielte Installation von `1.31.1-1.1` und sofortiges `apt-mark hold`.
+- **Bewertung:** 100 % fehlerfrei und prüfungskonform.
+
+#### 2. Aufgabe 2.2 (Control-Plane Upgrade via Kubeadm)
+
+- **Umsetzung:** `kubeadm upgrade plan` sauber analysiert und danach mit
+  `kubeadm upgrade apply v1.31.1 -y` angewendet.
+- **Verständnisfrage:** Perfekt beantwortet! `kubectl get nodes` liest die
+  Version aus der Registrierung des Kubelet-Agenten. Da das Kubelet auf dem
+  Master zu diesem Zeitpunkt noch auf `v1.31.0` lief, blieb die Anzeige bis zu
+  Schritt 2.3 auf dem alten Stand.
+
+#### 3. Aufgabe 2.3 (Master Kubelet & Kubectl Update)
+
+- **Umsetzung:** `kubelet` und `kubectl` entsperrt, auf `1.31.1-1.1` aktualisiert,
+  gesperrt und per `systemctl restart kubelet` neu geladen.
+- **Ergebnis:** `cka-master` wechselte sofort auf `v1.31.1` im Zustand `Ready`.
+- **Tipp für systemd:** Nach dem Ändern von Service-Binaries empfiehlt sich
+  immer ein kurzes `sudo systemctl daemon-reload` vor dem Restart.
+
+#### 4. Aufgabe 2.4 (Worker Node Upgrade-Workflow)
+
+- **Umsetzung:**
+  1. Auf Master: `kubectl drain cka-worker1 --ignore-daemonsets --force` (Status
+     wechselte vorschriftsmäßig auf `Ready,SchedulingDisabled`).
+  2. Auf Worker: Kubeadm aktualisiert, `sudo kubeadm upgrade node` ausgeführt,
+     Kubelet aktualisiert und neu gestartet.
+  3. Auf Master: `kubectl uncordon cka-worker1`.
+- **Ergebnis:** Beide Nodes sind `Ready` auf `v1.31.1`.
+- **Kleine Notiz zu `node01`:**
+  Der Befehl `kubectl uncordon <node>` wird wie der `drain`-Befehl immer **vom
+  Master / Control-Plane-Knoten** aus ausgeführt (nicht auf dem Worker selbst,
+  da dem Worker das Kubeconfig-Zertifikat fehlt).
+
+---
+
+### CKA-Takeaway & Prüfungs-Checkliste
+
+1. **Master zuerst:**
+   `apt kubeadm` → `kubeadm upgrade plan` → `kubeadm upgrade apply v1.x.y` →
+   `apt kubelet kubectl` → `systemctl restart kubelet`.
+2. **Worker danach:**
+   `kubectl drain <worker>` (vom Master!) → SSH auf Worker →
+   `apt kubeadm` → `kubeadm upgrade node` → `apt kubelet kubectl` →
+   `systemctl restart kubelet` → `kubectl uncordon <worker>` (vom Master!).
+
+**Ergebnis:** Block 2 mit Bravour gemeistert! 🎯
