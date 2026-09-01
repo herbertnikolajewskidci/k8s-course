@@ -27,6 +27,13 @@ learning methodology**:
    original summaries, mental models, YAML manifests, lab steps, and personal
    learning records.
 
+- **Feedback Style:** Keine übertriebene Schmeichelei ("genial",
+  "hervorragend"). Sachlich, präzise, direkt und ehrlich.
+- **Up-to-Date Standards (etcdutl vs. etcdctl):** Dokumentiere und unterrichte
+  immer den aktuellen offiziellen Kubernetes-Standard. Für etcd-Restores
+  explizit `etcdutl snapshot restore` als primären Standard vor `etcdctl`
+  (deprecated) führen.
+
 ## Session Startup Protocol (Autonomous Context Recovery)
 
 At the beginning of **EVERY new chat session or when Herbert enters**, the

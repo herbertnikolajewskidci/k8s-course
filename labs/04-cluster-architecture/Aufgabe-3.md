@@ -268,13 +268,26 @@ inklusive Static-Pod-Neustart.
 
 ### CKA-Prüfungs-Takeaways für etcd
 
-1. **Rechte beachten:** `etcdctl`-Befehle immer mit `sudo` ausführen, da
+1. **Aktueller Standard: `etcdutl` vs. `etcdctl` (Offline vs. Online):**
+   - **Backup (`snapshot save`):** Erfordert TLS-Zertifikate und
+     Netzwerkverbindung zum etcd-Port (2379) → **`etcdctl snapshot save`**.
+   - **Restore (`snapshot restore`):** Ist eine reine Offline-Dateioperation.
+     Seit etcd v3.5 ist `etcdctl snapshot restore` deprecated. Der offizielle
+     Standard lautet:
+
+     ```bash
+     etcdutl snapshot restore /tmp/etcd-backup.db --data-dir=/var/lib/etcd-restored
+     ```
+
+     (Falls `etcdutl` auf einer Node nicht installiert ist, dient `etcdctl`
+     als Fallback mit denselben Parametern).
+2. **Rechte beachten:** `etcdctl`-Befehle immer mit `sudo` ausführen, da
    `/etc/kubernetes/pki/etcd/server.key` nur für `root` lesbar ist.
-2. **Die 3 Pfade im etcd-Manifest:**
+3. **Die 3 Pfade im etcd-Manifest:**
    - `--data-dir=/var/lib/etcd-restored` (Container-Kommando)
    - `volumeMounts[...].mountPath: /var/lib/etcd-restored` (Container-Mount)
    - `volumes[...].hostPath.path: /var/lib/etcd-restored` (Echter Pfad auf Host)
-3. **API-Server Latenz:** Nach der Manifest-Änderung dauert es ca. 15–30
+4. **API-Server Latenz:** Nach der Manifest-Änderung dauert es ca. 15–30
    Sekunden, bis Kubelet den neuen etcd-Container hochfährt und der API-Server
    wieder antwortet.
 
