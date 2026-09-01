@@ -47,7 +47,7 @@ Objekte (Pods, Secrets, Deployments, RBAC) liegen binär in der etcd-Datenbank.
    - `--cacert`: `/etc/kubernetes/pki/etcd/ca.crt` (CA-Zertifikat)
    - `--cert`: `/etc/kubernetes/pki/etcd/server.crt` (Server-Zertifikat)
    - `--key`: `/etc/kubernetes/pki/etcd/server.key` (Privater Schlüssel)
-   - *Tipp:* Vor jeden Befehl `ETCDCTL_API=3` setzen (oder als Env exportieren).
+   - _Tipp:_ Vor jeden Befehl `ETCDCTL_API=3` setzen (oder als Env exportieren).
 2. **Die goldene Regel beim Restore:**
    - Ein Snapshot-Restore überschreibt **niemals** ein aktives etcd-Verzeichnis
      direkt im laufenden Betrieb.
@@ -129,18 +129,83 @@ Stelle nun den Zustand aus dem Backup `/tmp/etcd-backup.db` wieder her.
 
 ```bash
 # Deine Befehle / Notizen
+k -n kube-system describe pod etcd-cka-master  | grep -i -A3 etcd-certs:
+#  etcd-certs:
+#    Type:          HostPath (bare host directory volume)
+#    Path:          /etc/kubernetes/pki/etcd
+#    HostPathType:  DirectoryOrCreate
+
+k -n kube-system describe pod etcd-cka-master  | grep -i cert
+#      --cert-file=/etc/kubernetes/pki/etcd/server.crt
+#      --client-cert-auth=true
+#      --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+#      --peer-client-cert-auth=true
+#      /etc/kubernetes/pki/etcd from etcd-certs (rw)
+#  etcd-certs:
+
+k -n kube-system describe pod etcd-cka-master  | grep -i key
+#      --key-file=/etc/kubernetes/pki/etcd/server.key
+#      --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+
+k -n kube-system describe pod etcd-cka-master  | grep -i ca
+# Priority Class Name:  system-node-critical
+#      --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+#      --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+
+k -n kube-system describe pod etcd-cka-cluster-control-plane | grep 2379
+# Annotations:          kubeadm.kubernetes.io/etcd.advertise-client-urls: ...
+#      --advertise-client-urls=https://192.168.147.4:2379
+#      --listen-client-urls=https://127.0.0.1:2379,...
+
+sudo ETCDCTL_API=3 etcdctl \
+  --cacert="/etc/kubernetes/pki/etcd/ca.crt" \
+  --cert="/etc/kubernetes/pki/etcd/server.crt" \
+  --key="/etc/kubernetes/pki/etcd/server.key" \
+  --endpoints=https://127.0.0.1:2379 \
+  snapshot save /tmp/etcd-backup.db
+# Snapshot saved at /tmp/etcd-backup.db
+
+sudo etcdctl snapshot status /tmp/etcd-backup.db -w table
+# +----------+----------+------------+------------+
+# |   HASH   | REVISION | TOTAL KEYS | TOTAL SIZE |
+# +----------+----------+------------+------------+
+# | 1efc8bf0 |    14910 |       1049 |     3.0 MB |
+# +----------+----------+------------+------------+
 ```
 
 ### Lösung 3.2
 
 ```bash
 # Deine Befehle / Notizen
+kubectl delete namespace snapshot-test
+
+kubectl get ns snapshot-test
+# Error from server (NotFound): namespaces "snapshot-test" not found
 ```
 
 ### Lösung 3.3
 
 ```bash
 # Deine Befehle / Notizen
+sudo etcdctl snapshot restore /tmp/etcd-backup.db --data-dir=/var/lib/etcd-restored
+
+sudo vi /etc/kubernetes/manifests/etcd.yaml
+
+ändere /var/lib/etcd an drei stellen auf /var/lib/etcd-restored
+
+k get ns
+NAME              STATUS   AGE
+default           Active   3h18m
+kube-flannel      Active   3h17m
+kube-node-lease   Active   3h18m
+kube-public       Active   3h18m
+kube-system       Active   3h18m
+snapshot-test     Active   46m
+herbertnikolajewski@cka-master:~$ k -n snapshot-test get pods
+NAME                           READY   STATUS    RESTARTS   AGE
+imprtant-ap-7b4b6ddbfb-h7bmp   1/1     Running   0          46m
+imprtant-ap-7b4b6ddbfb-lp7cl   1/1     Running   0          46m
+imprtant-ap-7b4b6ddbfb-q74n4   1/1     Running   0          46m
 ```
 
 ---
@@ -161,5 +226,56 @@ Falls du während der Bearbeitung nachschlagen möchtest:
 
 ## 5. Feedback & Korrekturen
 
-Noch keine Einreichung vorhanden.
-Nach deiner Bearbeitung folgt hier das direkte Review.
+### Review zu Block 3: etcd Snapshot Backup & Restore
+
+Hervorragend gelöst! Du hast den gesamten Lifecycle von Disaster Recovery in
+Kubernetes gemeistert: Von der Parameter-Ermittlung über das Erstellen des
+Snapshots, der absichtlichen Zerstörung von Daten bis hin zum sauberen Restore
+inklusive Static-Pod-Neustart.
+
+---
+
+### Detaillierte Analyse & Feinheiten
+
+#### 1. Aufgabe 3.1 (Parameter-Ermittlung & Snapshot)
+
+- **Umsetzung:**
+  - Sehr gute Recherche der Pfade über `kubectl describe pod etcd-...`
+    (bzw. direkt `cat /etc/kubernetes/manifests/etcd.yaml`).
+  - Der `snapshot save`-Befehl mit `--cacert`, `--cert`, `--key` und
+    `--endpoints=https://127.0.0.1:2379` war absolut fehlerfrei.
+  - Tabellarische Verifikation mit `-w table` lieferte saubere Metriken
+    (Hash `1efc8bf0`, Revision `14910`, 1049 Keys).
+
+#### 2. Aufgabe 3.2 (Disaster Simulation)
+
+- **Umsetzung:** Der Namespace `snapshot-test` wurde komplett gelöscht und der
+  `NotFound`-Zustand verifiziert.
+
+#### 3. Aufgabe 3.3 (Restore & Manifest-Anpassung)
+
+- **Umsetzung:**
+  - `etcdctl snapshot restore /tmp/etcd-backup.db --data-dir=/var/lib/etcd-restored`
+    auf ein neues Datenverzeichnis ausgeführt.
+  - Das etcd-Manifest `/etc/kubernetes/manifests/etcd.yaml` konsequent an allen
+    Stellen (`command: --data-dir`, `volumeMounts: mountPath`,
+    `volumes: hostPath.path`) aktualisiert.
+- **Ergebnis:** Kubelet hat etcd und API-Server neu gestartet, der gelöschte
+  Namespace `snapshot-test` und alle 3 Pods von `important-app` waren sofort
+  wieder da (`1/1 Running`).
+
+---
+
+### CKA-Prüfungs-Takeaways für etcd
+
+1. **Rechte beachten:** `etcdctl`-Befehle immer mit `sudo` ausführen, da
+   `/etc/kubernetes/pki/etcd/server.key` nur für `root` lesbar ist.
+2. **Die 3 Pfade im etcd-Manifest:**
+   - `--data-dir=/var/lib/etcd-restored` (Container-Kommando)
+   - `volumeMounts[...].mountPath: /var/lib/etcd-restored` (Container-Mount)
+   - `volumes[...].hostPath.path: /var/lib/etcd-restored` (Echter Pfad auf Host)
+3. **API-Server Latenz:** Nach der Manifest-Änderung dauert es ca. 15–30
+   Sekunden, bis Kubelet den neuen etcd-Container hochfährt und der API-Server
+   wieder antwortet.
+
+**Ergebnis:** Block 3 mit Bravour gemeistert! 🎯
