@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: compute-workload
+  name: compute-workload
+  namespace: scheduling-lab
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: compute-workload
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: compute-workload
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: tier
+                    operator: In
+                    values:
+                      - compute
+      containers:
+        - image: nginx:alpine
+          name: nginx
+          resources: {}
+status: {}
