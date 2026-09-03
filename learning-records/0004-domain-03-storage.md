@@ -16,8 +16,8 @@
   `accessModes` (`ReadWriteOnce`), and `reclaimPolicy: Retain`.
 - Created namespace-scoped PersistentVolumeClaims (`requests.storage`).
 - Analyzed matching rules (`capacity >= request`, identical `storageClassName`,
-  matching `accessModes`) and status transitions (`Available` $\rightarrow$
-  `Bound` $\rightarrow$ `Released`).
+  matching `accessModes`) and status transitions (`Available` →
+  `Bound` → `Released`).
 - Mastered recycling of `Released` PVs via `spec.claimRef` clearing.
 
 ### 2. StorageClasses & Dynamic Volume Provisioning
@@ -31,7 +31,7 @@
 ### 3. Pod Volume Mounts & Data Persistence
 
 - Implemented 2-stage Pod storage pattern (`spec.volumes.persistentVolumeClaim`
-  $\rightarrow$ `spec.containers[*].volumeMounts`).
+  → `spec.containers[*].volumeMounts`).
 - Verified zero data loss across Pod deletion and replacement.
 - Configured secure read-only mounts (`volumeMounts[*].readOnly: true`) and
   verified kernel write protection (`Read-only file system`).

@@ -27,8 +27,12 @@ learning methodology**:
    original summaries, mental models, YAML manifests, lab steps, and personal
    learning records.
 
-- **Feedback Style:** Keine übertriebene Schmeichelei ("genial",
-  "hervorragend"). Sachlich, präzise, direkt und ehrlich.
+- **Separation of Tasks and Solutions:** Aufgabenstellungen verbleiben in
+  `Aufgabe-X.md`. Notizen, Befehle und Lösungen von Herbert werden in einer
+  separaten Datei `Aufgabe-X-solution.md` geführt. Der Agent darf
+  `Aufgabe-X-solution.md` niemals überschreiben oder ungefragt editieren,
+  sondern nur für Reviews lesen und das Feedback anschließend in `Aufgabe-X.md`
+  oder als separaten Review-Abschnitt dokumentieren.
 - **Up-to-Date Standards (etcdutl vs. etcdctl):** Dokumentiere und unterrichte
   immer den aktuellen offiziellen Kubernetes-Standard. Für etcd-Restores
   explizit `etcdutl snapshot restore` als primären Standard vor `etcdctl`
@@ -64,10 +68,15 @@ upon completion:
   2. Merge into `main` upon domain completion.
   3. Create an annotated Git tag for the completed domain milestone.
 
-## Local Environment & Architecture (Apple Silicon / ARM64)
+## Local Environment & Architecture (Apple Silicon / ARM64 / LazyVim)
 
-Herbert trains locally on **macOS Apple Silicon (ARM64)**:
+Herbert trains locally on **macOS Apple Silicon (ARM64)** and uses
+**Neovim / LazyVim** as his terminal editor:
 
+- **No LaTeX Syntax in Markdown:** Never use LaTeX formatting like
+  `$\rightarrow$` or math blocks `$$...$$`. Always use plain Unicode
+  characters (e.g. `→`) or standard plain text (`->`) so that LazyVim/Neovim
+  and terminal viewers render it cleanly without raw syntax clutter.
 - **Legacy Image Incompatibility:** Never enforce or prescribe legacy images
   that crash on ARM64 (e.g. `busybox:1.28` causes `SIGSEGV` on macOS).
 - **ARM64-Safe Debug Images:** Always use or suggest `curlimages/curl`,
@@ -75,6 +84,23 @@ Herbert trains locally on **macOS Apple Silicon (ARM64)**:
 - **Exam vs. Local Context:** Whenever an exam-standard image (like
   `busybox:1.28` from official docs) is mentioned, explicitly annotate that
   for local macOS testing an ARM64-compatible image should be used.
+
+## Lab Design & CKA Focus (No Linux-Trivial Traps)
+
+Labs must test **Kubernetes competencies**, not obscure Linux shell quirks:
+
+- **Pragmatic Linux Foundations:** Standard Linux commands (`cat`, `ls`, `grep`,
+  `curl`, `nc`, `systemctl`, `journalctl`) are an essential part of the CKA
+  exam and learning path. They should be used naturally and purposefully, but
+  never turn into obscure edge-case debugging puzzles (like CRI stream line-buffering).
+- **Clean Output & Flush (Newline / Line-Buffering):** When containers run
+  shell commands with `cat` or continuous output before a long `sleep`, always
+  ensure proper newlines (e.g. `echo` or proper line flush). Never create
+  situations where correct Kubernetes manifests fail to show expected logs
+  solely due to containerd/CRI line-buffering.
+- **Focus on CKA Patterns:** Tasks must be intuitive and testable directly via
+  standard `kubectl` and node-level CLI commands without requiring deep-dive
+  OS-level debugging (like stream buffering or xxd hex inspection).
 
 ## Agent Skills
 

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: auth-service
+  namespace: troubleshoot-app
+spec:
+  volumes:
+    - name: config
+      configMap:
+        name: auth-config
+  containers:
+    - name: app
+      image: busybox:latest
+      command:
+        - sh
+        - -c
+        - "echo Starting Auth Service... && cat /etc/config/api-key.txt && echo && sleep 3600"
+      envFrom:
+        - configMapRef:
+            name: auth-missing-cm
+      volumeMounts:
+        - name: config
+          mountPath: "/etc/config"
