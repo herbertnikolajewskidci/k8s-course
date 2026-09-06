@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CKA Exam Simulator — Linux Foundation Practice Environment</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☸️</text></svg>">
+</head>
+<body>
+
+  <!-- Top Examination Header Bar -->
+  <header class="exam-header">
+    <div class="header-left">
+      <div class="brand-badge">
+        <span>☸ CKA Exam Simulator</span>
+        <span class="env-tag">Linux Foundation</span>
+      </div>
+    </div>
+
+    <div class="header-nav">
+      <button id="btnPrev" class="nav-btn" title="Previous Question">&larr; Previous</button>
+      <select id="questionSelect" class="question-select" aria-label="Select Question"></select>
+      <button id="btnNext" class="nav-btn" title="Next Question">Next &rarr;</button>
+    </div>
+
+    <div class="header-right">
+      <a id="httpsSwitchBtn" class="https-switch-btn" href="#" title="Open secure session for hardware-accelerated desktop streaming">🔒 Switch to HTTPS (:8091)</a>
+      <select id="streamSelect" class="stream-select" title="Switch Desktop Stream Source"></select>
+      <div class="timer-container">
+        <span class="timer-label">Time Remaining:</span>
+        <span id="timerDisplay" class="timer-digits">02:00:00</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Split Screen Workspace -->
+  <main class="split-layout" id="splitLayout">
+    <!-- Left Pane: CKA Task Details -->
+    <aside class="task-panel" id="taskPanel">
+      <div class="task-meta-bar">
+        <span id="taskNumber" class="task-number">Question 1 of 17</span>
+        <span id="taskWeight" class="task-weight-pill">Weight: 4%</span>
+      </div>
+      <div class="task-scroll-area" id="taskScrollArea">
+        <h2 id="taskTitle" class="task-title">1. Pod Scheduling with NodeAffinity</h2>
+        <div id="taskBody">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Draggable Splitter Divider -->
+    <div class="resizer" id="resizer" title="Drag to adjust split ratio"></div>
+
+    <!-- Right Pane: Ubuntu XFCE Webtop Remote Desktop -->
+    <section class="desktop-panel" id="desktopPanel">
+      <iframe
+        id="desktopIframe"
+        class="desktop-iframe"
+        src="about:blank"
+        allow="clipboard-read; clipboard-write; autoplay; fullscreen"
+        title="Webtop Desktop Environment">
+      </iframe>
+    </section>
+  </main>
+
+  <!-- Clipboard Toast Notification -->
+  <div class="toast-notice" id="toastNotice" role="status" aria-live="polite">
+    <span class="toast-icon">✓</span>
+    <span id="toastText">Copied to clipboard</span>
+  </div>
+
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
