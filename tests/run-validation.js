@@ -52,6 +52,19 @@ async function run() {
     assert.notStrictEqual(time1, time2, 'Timer must tick down dynamically');
     console.log(`✅ AC 2: Live 120-minute countdown timer is functioning (${time1} -> ${time2}).`);
 
+    // 2b. Header & Task Nav Bar Placement Validation (Ticket 4 / Issue #17)
+    console.log('Testing Ticket 4: Navigation controls inside left task pane and header cleanliness...');
+    const headerNav = page.locator('.exam-header .header-nav');
+    assert.strictEqual(await headerNav.count(), 0, 'Header must not contain .header-nav');
+    const headerControls = page.locator('.exam-header #questionSelect, .exam-header #btnPrev, .exam-header #btnNext');
+    assert.strictEqual(await headerControls.count(), 0, 'Header must not contain question navigation controls');
+
+    const taskNavBar = page.locator('#taskPanel .task-nav-bar');
+    await taskNavBar.waitFor({ state: 'visible' });
+    const navInTask = page.locator('#taskPanel .task-nav-bar #questionSelect');
+    assert.strictEqual(await navInTask.count(), 1, 'Question select must reside inside #taskPanel .task-nav-bar');
+    console.log('✅ Ticket 4: Question controls successfully relocated to left task pane; header retains only brand and timer.');
+
     // 3. Questions 1-17 Navigation
     console.log('Testing navigation for Dummy Questions 1 through 17...');
     const select = page.locator('#questionSelect');
@@ -74,6 +87,13 @@ async function run() {
     assert.strictEqual(await taskNumber.textContent(), 'Question 2 of 17');
     assert.ok((await taskTitle.textContent()).includes('Scale Deployment'), 'Question 2 loaded');
     assert.strictEqual(await btnPrev.isEnabled(), true, 'Prev button enabled on question 2');
+
+    // Keyboard navigation: ArrowLeft -> Question 1, ArrowRight -> Question 2
+    await page.keyboard.press('ArrowLeft');
+    assert.strictEqual(await taskNumber.textContent(), 'Question 1 of 17', 'ArrowLeft navigates to Question 1');
+    await page.keyboard.press('ArrowRight');
+    assert.strictEqual(await taskNumber.textContent(), 'Question 2 of 17', 'ArrowRight navigates to Question 2');
+    console.log('✅ Ticket 4: Keyboard navigation (ArrowLeft / ArrowRight) functions correctly.');
 
     // Dropdown jump -> Question 11 (etcdutl restore)
     await select.selectOption('10'); // Index 10 is Question 11

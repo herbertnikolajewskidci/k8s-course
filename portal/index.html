@@ -18,12 +18,6 @@
       </div>
     </div>
 
-    <div class="header-nav">
-      <button id="btnPrev" class="nav-btn" title="Previous Question">&larr; Previous</button>
-      <select id="questionSelect" class="question-select" aria-label="Select Question"></select>
-      <button id="btnNext" class="nav-btn" title="Next Question">Next &rarr;</button>
-    </div>
-
     <div class="header-right">
       <a id="httpsSwitchBtn" class="https-switch-btn" href="#" title="Open secure session for hardware-accelerated desktop streaming">🔒 Switch to HTTPS (:8091)</a>
       <select id="streamSelect" class="stream-select" title="Switch Desktop Stream Source"></select>
@@ -38,6 +32,11 @@
   <main class="split-layout" id="splitLayout">
     <!-- Left Pane: CKA Task Details -->
     <aside class="task-panel" id="taskPanel">
+      <div class="task-nav-bar" id="taskNavBar">
+        <button id="btnPrev" class="nav-btn" title="Previous Question">&larr; Previous</button>
+        <select id="questionSelect" class="question-select" aria-label="Select Question"></select>
+        <button id="btnNext" class="nav-btn" title="Next Question">Next &rarr;</button>
+      </div>
       <div class="task-meta-bar">
         <span id="taskNumber" class="task-number">Question 1 of 17</span>
         <span id="taskWeight" class="task-weight-pill">Weight: 4%</span>

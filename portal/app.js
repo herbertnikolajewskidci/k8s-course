@@ -7,14 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let toastTimer = null;
 
   // DOM Elements
-  const taskPanel = document.getElementById('taskPanel');
+  const taskPanel = document.getElementById('taskPanel') || document.getElementById('pane-task');
   const resizer = document.getElementById('resizer');
   const splitLayout = document.getElementById('splitLayout');
   const desktopIframe = document.getElementById('desktopIframe');
   const streamSelect = document.getElementById('streamSelect');
-  const questionSelect = document.getElementById('questionSelect');
-  const btnPrev = document.getElementById('btnPrev');
-  const btnNext = document.getElementById('btnNext');
+  const questionSelect = document.getElementById('questionSelect') || document.getElementById('question-select');
+  const btnPrev = document.getElementById('btnPrev') || document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btnNext') || document.getElementById('btn-next');
   const timerDisplay = document.getElementById('timerDisplay');
   const taskNumber = document.getElementById('taskNumber');
   const taskWeight = document.getElementById('taskWeight');
@@ -231,10 +231,33 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateTimer, 1000);
   }
 
+  // 6. Keyboard Navigation (ArrowLeft / ArrowRight)
+  function initKeyboardNav() {
+    window.addEventListener('keydown', (e) => {
+      const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') {
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
+        if (currentQuestionIndex > 0) {
+          e.preventDefault();
+          loadQuestion(currentQuestionIndex - 1);
+        }
+      } else if (e.key === 'ArrowRight') {
+        if (currentQuestionIndex < questions.length - 1) {
+          e.preventDefault();
+          loadQuestion(currentQuestionIndex + 1);
+        }
+      }
+    });
+  }
+
   // Run all inits
   initDesktopStream();
   initQuestions();
   initResizer();
   initClickToCopy();
   initTimer();
+  initKeyboardNav();
 });

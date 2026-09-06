@@ -23,6 +23,29 @@ test('PSI Portal - Page title, layout and timer', async ({ page }) => {
   expect(nextTime).not.toBe(initialTime);
 });
 
+test('PSI Portal - Task Navigation Bar in Left Pane and Header Cleanliness', async ({ page }) => {
+  await page.goto('http://192.168.131.223:8090');
+
+  // Verify header has no navigation controls
+  await expect(page.locator('.exam-header .header-nav')).toHaveCount(0);
+  await expect(page.locator('.exam-header #questionSelect')).toHaveCount(0);
+
+  // Verify task nav bar exists inside #taskPanel
+  const taskNavBar = page.locator('#taskPanel .task-nav-bar');
+  await expect(taskNavBar).toBeVisible();
+  await expect(page.locator('#taskPanel .task-nav-bar #questionSelect')).toBeVisible();
+  await expect(page.locator('#taskPanel .task-nav-bar #btnPrev')).toBeVisible();
+  await expect(page.locator('#taskPanel .task-nav-bar #btnNext')).toBeVisible();
+
+  // Test keyboard navigation
+  const taskNumber = page.locator('#taskNumber');
+  await expect(taskNumber).toHaveText('Question 1 of 17');
+  await page.keyboard.press('ArrowRight');
+  await expect(taskNumber).toHaveText('Question 2 of 17');
+  await page.keyboard.press('ArrowLeft');
+  await expect(taskNumber).toHaveText('Question 1 of 17');
+});
+
 test('PSI Portal - Navigation through all 17 dummy questions', async ({ page }) => {
   await page.goto('http://192.168.131.223:8090');
 
