@@ -173,6 +173,60 @@ async function run() {
     assert.ok(httpIframeSrc.includes('192.168.131.223:3030'), 'Stream switcher switches to direct HTTP :3030');
     console.log('✅ AC 6: Webtop desktop iframe renders with flexible stream switching.');
 
+    // 7. Ticket 5 / Issue #18: Doc Helper Links with Auto-Open in Remote Desktop Firefox
+    console.log('Testing Ticket 5 / Issue #18: Doc Helper Links with Auto-Open in Remote Desktop Firefox...');
+
+    // 7a. Verify Doc Helper Container & Pills across questions
+    await select.selectOption('0'); // Question 1
+    const docContainer = page.locator('#taskBody .task-docs-container');
+    await docContainer.waitFor({ state: 'visible' });
+    const pillsQ1 = docContainer.locator('.doc-pill-btn');
+    const pillsCountQ1 = await pillsQ1.count();
+    assert.ok(pillsCountQ1 >= 1, `Question 1 must have at least 1 doc helper pill (found ${pillsCountQ1})`);
+
+    const q1DocTitle = await pillsQ1.first().locator('.doc-pill-text').textContent();
+    assert.strictEqual(q1DocTitle, 'Assigning Pods to Nodes', 'First doc pill title matches');
+    const q1DocUrl = await pillsQ1.first().getAttribute('data-url');
+    assert.ok(q1DocUrl.includes('kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node'), 'Doc URL is official k8s doc link');
+
+    // Verify Question 4 (Ingress) and Question 11 (etcd) have doc pills
+    await select.selectOption('3'); // Question 4
+    await page.locator('#taskBody .task-docs-container').waitFor({ state: 'visible' });
+    const pillsQ4 = page.locator('#taskBody .task-docs-container .doc-pill-btn');
+    assert.ok((await pillsQ4.count()) >= 1, 'Question 4 has doc helper pills');
+    const q4DocTitle = await pillsQ4.first().locator('.doc-pill-text').textContent();
+    assert.strictEqual(q4DocTitle, 'Ingress', 'Question 4 first doc pill is Ingress');
+
+    await select.selectOption('10'); // Question 11
+    await page.locator('#taskBody .task-docs-container').waitFor({ state: 'visible' });
+    const pillsQ11 = page.locator('#taskBody .task-docs-container .doc-pill-btn');
+    assert.ok((await pillsQ11.count()) >= 1, 'Question 11 has doc helper pills');
+    const q11DocTitle = await pillsQ11.first().locator('.doc-pill-text').textContent();
+    assert.ok(q11DocTitle.includes('etcd'), 'Question 11 doc pill references etcd');
+
+    // 7b. Click Doc Pill -> Backend API Call & Toast Feedback
+    await select.selectOption('3'); // Question 4: Ingress
+    const ingressPill = page.locator('#taskBody .task-docs-container .doc-pill-btn').first();
+
+    const [apiResponse] = await Promise.all([
+      page.waitForResponse(res => res.url().includes('/api/open-doc') && res.status() === 200),
+      ingressPill.click()
+    ]);
+
+    const apiJson = await apiResponse.json();
+    assert.strictEqual(apiJson.success, true, 'API response must have success: true');
+    assert.ok(apiJson.url.includes('kubernetes.io/docs/concepts/services-networking/ingress/'), 'API received correct URL');
+    console.log(`✅ Ticket 5 API: /api/open-doc returned HTTP 200 with success: true for ${apiJson.url}`);
+
+    // Verify Toast visual feedback
+    const docToast = page.locator('#toastNotice');
+    await docToast.waitFor({ state: 'visible' });
+    const docToastClass = await docToast.getAttribute('class');
+    assert.ok(docToastClass.includes('show'), 'Toast must be visible');
+    const docToastContent = await docToast.textContent();
+    assert.ok(docToastContent.includes('Firefox') && docToastContent.includes('Ingress'), `Toast confirms dispatch to Firefox (was "${docToastContent}")`);
+    console.log(`✅ Ticket 5 UX: Toast feedback verified ("${docToastContent}")`);
+
     console.log('\n🎉 ALL ACCEPTANCE CRITERIA VERIFIED SUCCESSFULLY!');
   } finally {
     await browser.close();

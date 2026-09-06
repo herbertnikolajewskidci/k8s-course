@@ -1,5 +1,6 @@
 // CKA Dummy Questions 1-17
-// Realistic exam tasks covering all 5 CKA domains with authentic weights, contexts, and code snippets.
+// Realistic exam tasks covering all 5 CKA domains with authentic weights, contexts, code snippets,
+// and official documentation recommendation links.
 
 window.QUESTIONS = [
   {
@@ -8,6 +9,16 @@ window.QUESTIONS = [
     title: "Pod Scheduling with NodeAffinity",
     context: "kubectl config use-context k8s",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Assigning Pods to Nodes",
+        url: "https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/"
+      },
+      {
+        title: "Node Affinity Syntax",
+        url: "https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -35,6 +46,20 @@ window.QUESTIONS = [
     title: "Scale Deployment & Record Revision",
     context: "kubectl config use-context k8s",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Deployments",
+        url: "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
+      },
+      {
+        title: "Scaling a Deployment",
+        url: "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#scaling-a-deployment"
+      },
+      {
+        title: "Rollout History",
+        url: "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#checking-rollout-history-of-a-deployment"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -61,6 +86,16 @@ window.QUESTIONS = [
     title: "Multi-Container Pod with Logging Sidecar",
     context: "kubectl config use-context infra-prod",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Communicate Between Containers in a Pod",
+        url: "https://kubernetes.io/docs/tasks/access-application-cluster/communicate-between-containers-same-pod-shared-volume/"
+      },
+      {
+        title: "Logging Architecture",
+        url: "https://kubernetes.io/docs/concepts/cluster-administration/logging/"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -92,6 +127,16 @@ window.QUESTIONS = [
     title: "Ingress Routing with Path-Based Rules",
     context: "kubectl config use-context k8s",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Ingress",
+        url: "https://kubernetes.io/docs/concepts/services-networking/ingress/"
+      },
+      {
+        title: "Ingress Path Types",
+        url: "https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -119,6 +164,16 @@ window.QUESTIONS = [
     title: "NetworkPolicy Restricting Database Access",
     context: "kubectl config use-context security",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Network Policies",
+        url: "https://kubernetes.io/docs/concepts/services-networking/network-policies/"
+      },
+      {
+        title: "Declare Network Policy",
+        url: "https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -147,6 +202,16 @@ window.QUESTIONS = [
     title: "PersistentVolume & PVC with Retain Reclaim Policy",
     context: "kubectl config use-context k8s",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Persistent Volumes",
+        url: "https://kubernetes.io/docs/concepts/storage/persistent-volumes/"
+      },
+      {
+        title: "Configure Persistent Volume Storage",
+        url: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -184,6 +249,16 @@ window.QUESTIONS = [
     title: "StorageClass with WaitForFirstConsumer",
     context: "kubectl config use-context storage-ops",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Storage Classes",
+        url: "https://kubernetes.io/docs/concepts/storage/storage-classes/"
+      },
+      {
+        title: "Volume Binding Mode",
+        url: "https://kubernetes.io/docs/concepts/storage/storage-classes/#volume-binding-mode"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -211,6 +286,16 @@ window.QUESTIONS = [
     title: "RBAC Role & RoleBinding for ServiceAccount",
     context: "kubectl config use-context k8s",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Using RBAC Authorization",
+        url: "https://kubernetes.io/docs/reference/access-authn-authz/rbac/"
+      },
+      {
+        title: "Managing Service Accounts",
+        url: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -237,6 +322,16 @@ window.QUESTIONS = [
     title: "Node Maintenance: Safe Evacuation & Drain",
     context: "kubectl config use-context cluster-admin",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Safely Drain a Node",
+        url: "https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/"
+      },
+      {
+        title: "Manual Node Administration",
+        url: "https://kubernetes.io/docs/concepts/architecture/nodes/#manual-node-administration"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -267,6 +362,16 @@ kubectl uncordon k8s-worker-1</code></pre>
     title: "Control Plane Upgrade with Kubeadm",
     context: "kubectl config use-context cluster-admin",
     nodeSsh: "ssh k8s-control-plane",
+    docs: [
+      {
+        title: "Upgrading kubeadm clusters",
+        url: "https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/"
+      },
+      {
+        title: "Upgrading control plane nodes",
+        url: "https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/#upgrading-control-plane-nodes"
+      }
+    ],
     body: `
       <p>Set the current context and connect to the control plane node:</p>
       <div class="context-box">
@@ -295,6 +400,16 @@ kubectl uncordon k8s-worker-1</code></pre>
     title: "etcd Backup and Restore using etcdutl",
     context: "kubectl config use-context etcd-backup",
     nodeSsh: "ssh k8s-control-plane",
+    docs: [
+      {
+        title: "Operating etcd clusters for Kubernetes",
+        url: "https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/"
+      },
+      {
+        title: "Restoring an etcd cluster",
+        url: "https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#restoring-an-etcd-cluster"
+      }
+    ],
     body: `
       <p>Set the current context and connect to the control plane node:</p>
       <div class="context-box">
@@ -325,6 +440,12 @@ kubectl uncordon k8s-worker-1</code></pre>
     title: "Static Pod Deployment on Worker Node",
     context: "kubectl config use-context k8s",
     nodeSsh: "ssh k8s-worker-2",
+    docs: [
+      {
+        title: "Create static Pods",
+        url: "https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/"
+      }
+    ],
     body: `
       <p>Set the current context and access the target worker node:</p>
       <div class="context-box">
@@ -353,6 +474,16 @@ kubectl uncordon k8s-worker-1</code></pre>
     title: "Troubleshoot Failing Worker Node Kubelet",
     context: "kubectl config use-context troubleshoot",
     nodeSsh: "ssh k8s-worker-3",
+    docs: [
+      {
+        title: "Troubleshooting Clusters",
+        url: "https://kubernetes.io/docs/tasks/debug/debug-cluster/"
+      },
+      {
+        title: "Kubelet Configuration",
+        url: "https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/"
+      }
+    ],
     body: `
       <p>Set the current context and inspect node health:</p>
       <div class="context-box">
@@ -383,6 +514,12 @@ journalctl -u kubelet -e --no-pager</code></pre>
     title: "CoreDNS Custom Upstream Resolution",
     context: "kubectl config use-context k8s",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Customizing DNS Service",
+        url: "https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -414,6 +551,16 @@ journalctl -u kubelet -e --no-pager</code></pre>
     title: "Helm Chart Deployment & Rollback",
     context: "kubectl config use-context helm-cluster",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Helm Documentation",
+        url: "https://helm.sh/docs/"
+      },
+      {
+        title: "Helm Quickstart Guide",
+        url: "https://helm.sh/docs/intro/quickstart/"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -438,6 +585,12 @@ journalctl -u kubelet -e --no-pager</code></pre>
     title: "Kustomize Overlay Customization",
     context: "kubectl config use-context kustomize-env",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Declarative Management with Kustomize",
+        url: "https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">
@@ -464,6 +617,16 @@ journalctl -u kubelet -e --no-pager</code></pre>
     title: "Gateway API HTTPRoute Traffic Splitting",
     context: "kubectl config use-context gateway-ops",
     nodeSsh: null,
+    docs: [
+      {
+        title: "Gateway API Specification",
+        url: "https://gateway-api.sigs.k8s.io/"
+      },
+      {
+        title: "Kubernetes Gateway API Concepts",
+        url: "https://kubernetes.io/docs/concepts/services-networking/gateway/"
+      }
+    ],
     body: `
       <p>Set the current context before starting the task:</p>
       <div class="context-box">

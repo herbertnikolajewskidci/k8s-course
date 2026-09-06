@@ -5,6 +5,7 @@
 .scratch/
 tmp/
 *.log
+node_modules/
 
 # Killer.sh simulation materials & exam references (local only, no copyright infringement)
 docs/exam-references/

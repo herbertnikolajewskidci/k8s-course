@@ -104,11 +104,105 @@ document.addEventListener('DOMContentLoaded', () => {
     taskTitle.textContent = `${q.id}. ${q.title}`;
     taskBody.innerHTML = q.body;
 
+    // Render interactive Doc Helper Links under Context Box
+    renderDocHelpers(q);
+
     questionSelect.value = index;
     btnPrev.disabled = (index === 0);
     btnNext.disabled = (index === questions.length - 1);
 
     taskScrollArea.scrollTop = 0;
+  }
+
+  // Render official documentation helper pills under the context box
+  function renderDocHelpers(q) {
+    if (!q.docs || !Array.isArray(q.docs) || q.docs.length === 0) return;
+
+    const docContainer = document.createElement('div');
+    docContainer.className = 'task-docs-container';
+
+    const header = document.createElement('div');
+    header.className = 'task-docs-header';
+    header.innerHTML = `
+      <span class="docs-icon">📖</span>
+      <span class="docs-heading">Official Documentation:</span>
+    `;
+    docContainer.appendChild(header);
+
+    const pillsWrapper = document.createElement('div');
+    pillsWrapper.className = 'doc-pills';
+
+    q.docs.forEach((doc) => {
+      const btn = document.createElement('button');
+      btn.className = 'doc-pill-btn';
+      btn.setAttribute('type', 'button');
+      btn.setAttribute('data-url', doc.url);
+      btn.setAttribute('title', `Open "${doc.title}" in Remote Desktop Firefox`);
+      btn.innerHTML = `
+        <span class="doc-pill-icon">🌐</span>
+        <span class="doc-pill-text">${escapeHtml(doc.title)}</span>
+        <span class="doc-pill-badge">↗ Firefox</span>
+      `;
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dispatchDocUrl(doc.url, doc.title, btn);
+      });
+
+      pillsWrapper.appendChild(btn);
+    });
+
+    docContainer.appendChild(pillsWrapper);
+
+    // Insert directly below .context-box if present, otherwise prepend to taskBody
+    const contextBox = taskBody.querySelector('.context-box');
+    if (contextBox && contextBox.nextSibling) {
+      taskBody.insertBefore(docContainer, contextBox.nextSibling);
+    } else if (contextBox) {
+      taskBody.appendChild(docContainer);
+    } else {
+      taskBody.insertBefore(docContainer, taskBody.firstChild);
+    }
+  }
+
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Dispatch documentation URL to Remote Desktop Firefox via backend API
+  async function dispatchDocUrl(url, title, btn) {
+    if (!url) return;
+
+    btn.classList.add('opening');
+    showToast(`Opening in Firefox: ${title}`, '🌐');
+
+    try {
+      const response = await fetch(`/api/open-doc?url=${encodeURIComponent(url)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      const data = await response.json();
+      btn.classList.remove('opening');
+
+      if (response.ok && data.success) {
+        btn.classList.add('opened');
+        showToast(`Dispatched to Firefox: ${title}`, '✓');
+        setTimeout(() => btn.classList.remove('opened'), 1500);
+      } else {
+        console.error('Doc open failed:', data);
+        showToast(`Failed to open doc in Firefox`, '⚠️');
+      }
+    } catch (err) {
+      console.error('Network error dispatching doc URL:', err);
+      btn.classList.remove('opening');
+      showToast(`Request dispatched: ${title}`, '🌐');
+    }
   }
 
   // 3. Resizer with Mouse-Trap Protection
@@ -181,18 +275,26 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.removeChild(textArea);
   }
 
-  function triggerFeedback(codeEl, text) {
-    codeEl.classList.add('copied');
-    setTimeout(() => codeEl.classList.remove('copied'), 800);
-
-    const snippet = text.length > 36 ? text.substring(0, 36) + '...' : text;
-    toastText.textContent = `Copied to clipboard: ${snippet}`;
+  function showToast(message, icon = '✓') {
+    const toastIcon = toastNotice.querySelector('.toast-icon');
+    if (toastIcon) {
+      toastIcon.textContent = icon;
+    }
+    toastText.textContent = message;
     toastNotice.classList.add('show');
 
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
       toastNotice.classList.remove('show');
-    }, 2200);
+    }, 2400);
+  }
+
+  function triggerFeedback(codeEl, text) {
+    codeEl.classList.add('copied');
+    setTimeout(() => codeEl.classList.remove('copied'), 800);
+
+    const snippet = text.length > 36 ? text.substring(0, 36) + '...' : text;
+    showToast(`Copied to clipboard: ${snippet}`, '✓');
   }
 
   // 5. 120-Minute Exam Countdown Timer

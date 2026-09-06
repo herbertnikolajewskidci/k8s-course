@@ -160,3 +160,40 @@ test('PSI Portal - Webtop Desktop Iframe Configuration', async ({ page }) => {
   const httpSrc = await iframe.getAttribute('src');
   expect(httpSrc).toMatch(/192\.168\.131\.223:3030/);
 });
+
+test('PSI Portal - Doc Helper Links and Firefox Auto-Open', async ({ page, request }) => {
+  await page.goto('http://192.168.131.223:8090');
+
+  // Verify Doc Helper container and pills for Question 1
+  const docContainer = page.locator('#taskBody .task-docs-container');
+  await expect(docContainer).toBeVisible();
+
+  const pills = docContainer.locator('.doc-pill-btn');
+  const pillCount = await pills.count();
+  expect(pillCount).toBeGreaterThanOrEqual(1);
+
+  const firstPill = pills.first();
+  await expect(firstPill).toContainText('Assigning Pods to Nodes');
+  const docUrl = await firstPill.getAttribute('data-url');
+  expect(docUrl).toContain('kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node');
+
+  // Test Direct Backend API Health
+  const healthRes = await request.get('http://192.168.131.223:8090/api/health');
+  expect(healthRes.ok()).toBeTruthy();
+  const healthJson = await healthRes.json();
+  expect(healthJson.status).toBe('ok');
+
+  // Test Clicking Doc Pill triggers API & Toast
+  const [response] = await Promise.all([
+    page.waitForResponse(res => res.url().includes('/api/open-doc') && res.status() === 200),
+    firstPill.click()
+  ]);
+
+  const resJson = await response.json();
+  expect(resJson.success).toBe(true);
+
+  // Toast confirmation
+  const toast = page.locator('#toastNotice');
+  await expect(toast).toBeVisible();
+  await expect(toast).toContainText('Assigning Pods to Nodes');
+});
