@@ -3,7 +3,7 @@
 
 PIDFILE="/var/run/cka-doc-api.pid"
 LOGFILE="/var/log/cka-doc-api.log"
-SCRIPT="/mnt/cache/appdata/cka-psi-portal/api-server.py"
+SCRIPT="/mnt/user/appdata/cka-psi-portal/api-server.py"
 
 case "$1" in
   start)
