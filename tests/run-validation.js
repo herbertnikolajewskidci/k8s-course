@@ -52,6 +52,58 @@ async function run() {
     assert.notStrictEqual(time1, time2, 'Timer must tick down dynamically');
     console.log(`✅ AC 2: Live 120-minute countdown timer is functioning (${time1} -> ${time2}).`);
 
+    // 2c. Timer Pause & Reset Controls Validation (Ticket 6 / Issue #19)
+    console.log('Testing Ticket 6 / Issue #19: Timer Pause and Reset Controls...');
+    const btnTimerToggle = page.locator('#btnTimerToggle');
+    const btnTimerReset = page.locator('#btnTimerReset');
+    const timerContainer = page.locator('#timerContainer');
+    const timerPausedBadge = page.locator('#timerPausedBadge');
+
+    await btnTimerToggle.waitFor({ state: 'visible' });
+    await btnTimerReset.waitFor({ state: 'visible' });
+    assert.strictEqual(await btnTimerToggle.textContent(), '⏸ Pause', 'Initial button text is Pause');
+
+    // Click Pause
+    await btnTimerToggle.click();
+    assert.strictEqual(await btnTimerToggle.textContent(), '▶ Resume', 'Toggle button switches to Resume when clicked');
+    const containerClassesAfterPause = await timerContainer.getAttribute('class');
+    assert.ok(containerClassesAfterPause.includes('timer-paused'), 'Container receives timer-paused class');
+    assert.strictEqual(await timerPausedBadge.isVisible(), true, 'Paused badge is visible when paused');
+
+    // Verify time does not decrease while paused
+    const pausedTime1 = await timer.textContent();
+    await page.waitForTimeout(1500);
+    const pausedTime2 = await timer.textContent();
+    assert.strictEqual(pausedTime1, pausedTime2, 'Timer must halt decrementing when paused');
+
+    // Click Reset while paused
+    await btnTimerReset.click();
+    const resetTime = await timer.textContent();
+    assert.strictEqual(resetTime, '02:00:00', 'Reset button restores display to 02:00:00');
+    const resetTimeClass = await timerContainer.getAttribute('class');
+    assert.ok(resetTimeClass.includes('timer-paused'), 'Timer remains in paused state if reset was pressed while paused');
+
+    // Click Resume
+    await btnTimerToggle.click();
+    assert.strictEqual(await btnTimerToggle.textContent(), '⏸ Pause', 'Toggle button switches back to Pause on resume');
+    const containerClassesAfterResume = (await timerContainer.getAttribute('class')) || '';
+    assert.ok(!containerClassesAfterResume.includes('timer-paused'), 'Container clears timer-paused class');
+
+    // Wait and verify countdown resumes from 02:00:00
+    await page.waitForTimeout(1500);
+    const resumedTime = await timer.textContent();
+    assert.notStrictEqual(resumedTime, '02:00:00', 'Timer decrements after resuming from reset');
+
+    // Click Reset while running
+    await btnTimerReset.click();
+    const resetRunningTime = await timer.textContent();
+    assert.strictEqual(resetRunningTime, '02:00:00', 'Reset button restores display to 02:00:00 while running');
+    await page.waitForTimeout(1500);
+    const tickingAfterReset = await timer.textContent();
+    assert.notStrictEqual(tickingAfterReset, '02:00:00', 'Timer continues running after reset while running');
+
+    console.log('✅ Ticket 6 / Issue #19: Timer Pause, Resume, and Reset controls verified successfully.');
+
     // 2b. Header & Task Nav Bar Placement Validation (Ticket 4 / Issue #17)
     console.log('Testing Ticket 4: Navigation controls inside left task pane and header cleanliness...');
     const headerNav = page.locator('.exam-header .header-nav');

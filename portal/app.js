@@ -297,40 +297,117 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Copied to clipboard: ${snippet}`, '✓');
   }
 
-  // 5. 120-Minute Exam Countdown Timer
+  // 5. 120-Minute Exam Countdown Timer with Controls (Pause / Resume / Reset)
   function initTimer() {
-    let remainingSeconds = 120 * 60; // 2 hours
+    const DEFAULT_SECONDS = 120 * 60; // 7200s (2 hours)
+    let timerSecondsRemaining = DEFAULT_SECONDS;
+    let isTimerRunning = true;
+    let timerInterval = null;
 
-    function updateTimer() {
-      if (remainingSeconds <= 0) {
-        timerDisplay.textContent = '00:00:00';
-        timerDisplay.className = 'timer-digits danger';
-        return;
-      }
+    const timerContainer = document.getElementById('timerContainer') || document.querySelector('.timer-container');
+    const btnTimerToggle = document.getElementById('btnTimerToggle');
+    const btnTimerReset = document.getElementById('btnTimerReset');
 
-      remainingSeconds--;
-      const hours = Math.floor(remainingSeconds / 3600);
-      const minutes = Math.floor((remainingSeconds % 3600) / 60);
-      const seconds = remainingSeconds % 60;
-
+    function formatTime(totalSeconds) {
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
       const hStr = String(hours).padStart(2, '0');
       const mStr = String(minutes).padStart(2, '0');
       const sStr = String(seconds).padStart(2, '0');
+      return `${hStr}:${mStr}:${sStr}`;
+    }
 
-      timerDisplay.textContent = `${hStr}:${mStr}:${sStr}`;
+    function renderDisplay() {
+      if (!timerDisplay) return;
+      timerDisplay.textContent = formatTime(timerSecondsRemaining);
 
-      if (remainingSeconds < 900) { // < 15 min
-        timerDisplay.className = 'timer-digits danger';
-      } else if (remainingSeconds < 1800) { // < 30 min
-        timerDisplay.className = 'timer-digits warning';
-      } else {
-        timerDisplay.className = 'timer-digits';
+      timerDisplay.classList.remove('warning', 'danger');
+      if (timerSecondsRemaining < 900) { // < 15 min
+        timerDisplay.classList.add('danger');
+      } else if (timerSecondsRemaining < 1800) { // < 30 min
+        timerDisplay.classList.add('warning');
       }
     }
 
-    // Set initial display
-    timerDisplay.textContent = '02:00:00';
-    setInterval(updateTimer, 1000);
+    function tick() {
+      if (timerSecondsRemaining <= 0) {
+        timerSecondsRemaining = 0;
+        renderDisplay();
+        pauseTimer();
+        return;
+      }
+      timerSecondsRemaining--;
+      renderDisplay();
+    }
+
+    function startTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+      isTimerRunning = true;
+      if (timerContainer) {
+        timerContainer.classList.remove('timer-paused');
+      }
+      if (btnTimerToggle) {
+        btnTimerToggle.textContent = '⏸ Pause';
+        btnTimerToggle.setAttribute('title', 'Pause Timer');
+      }
+      timerInterval = setInterval(tick, 1000);
+    }
+
+    function pauseTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      isTimerRunning = false;
+      if (timerContainer) {
+        timerContainer.classList.add('timer-paused');
+      }
+      if (btnTimerToggle) {
+        btnTimerToggle.textContent = '▶ Resume';
+        btnTimerToggle.setAttribute('title', 'Resume Timer');
+      }
+    }
+
+    function toggleTimer() {
+      if (isTimerRunning) {
+        pauseTimer();
+        showToast('Timer paused', '⏸');
+      } else {
+        if (timerSecondsRemaining <= 0) {
+          timerSecondsRemaining = DEFAULT_SECONDS;
+        }
+        startTimer();
+        showToast('Timer resumed', '▶');
+      }
+    }
+
+    function resetTimer() {
+      timerSecondsRemaining = DEFAULT_SECONDS;
+      renderDisplay();
+
+      if (isTimerRunning) {
+        startTimer();
+      } else {
+        if (timerContainer) {
+          timerContainer.classList.add('timer-paused');
+        }
+      }
+      showToast('Timer reset to 02:00:00', '↺');
+    }
+
+    if (btnTimerToggle) {
+      btnTimerToggle.addEventListener('click', toggleTimer);
+    }
+    if (btnTimerReset) {
+      btnTimerReset.addEventListener('click', resetTimer);
+    }
+
+    // Set initial display and start countdown
+    renderDisplay();
+    startTimer();
   }
 
   // 6. Keyboard Navigation (ArrowLeft / ArrowRight)

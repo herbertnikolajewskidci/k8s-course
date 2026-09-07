@@ -21,9 +21,12 @@
     <div class="header-right">
       <a id="httpsSwitchBtn" class="https-switch-btn" href="#" title="Open secure session for hardware-accelerated desktop streaming">🔒 Switch to HTTPS (:8091)</a>
       <select id="streamSelect" class="stream-select" title="Switch Desktop Stream Source"></select>
-      <div class="timer-container">
+      <div class="timer-container" id="timerContainer">
         <span class="timer-label">Time Remaining:</span>
         <span id="timerDisplay" class="timer-digits">02:00:00</span>
+        <span id="timerPausedBadge" class="timer-paused-badge" aria-hidden="true">(Paused)</span>
+        <button id="btnTimerToggle" class="timer-btn" title="Pause / Resume Timer">⏸ Pause</button>
+        <button id="btnTimerReset" class="timer-btn" title="Reset to 120 minutes">↺ Reset</button>
       </div>
     </div>
   </header>

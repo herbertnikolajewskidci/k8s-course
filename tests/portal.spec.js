@@ -23,6 +23,46 @@ test('PSI Portal - Page title, layout and timer', async ({ page }) => {
   expect(nextTime).not.toBe(initialTime);
 });
 
+test('PSI Portal - Timer Pause, Resume and Reset Controls (Ticket 6)', async ({ page }) => {
+  await page.goto('http://192.168.131.223:8090');
+
+  const timer = page.locator('#timerDisplay');
+  const timerContainer = page.locator('#timerContainer');
+  const timerPausedBadge = page.locator('#timerPausedBadge');
+  const btnToggle = page.locator('#btnTimerToggle');
+  const btnReset = page.locator('#btnTimerReset');
+
+  // Verify elements are visible
+  await expect(btnToggle).toBeVisible();
+  await expect(btnReset).toBeVisible();
+  await expect(btnToggle).toHaveText('⏸ Pause');
+
+  // Click Pause
+  await btnToggle.click();
+  await expect(btnToggle).toHaveText('▶ Resume');
+  await expect(timerContainer).toHaveClass(/timer-paused/);
+  await expect(timerPausedBadge).toBeVisible();
+
+  // Time does not change while paused
+  const pausedTime = await timer.textContent();
+  await page.waitForTimeout(1500);
+  expect(await timer.textContent()).toBe(pausedTime);
+
+  // Click Reset while paused
+  await btnReset.click();
+  expect(await timer.textContent()).toBe('02:00:00');
+  await expect(timerContainer).toHaveClass(/timer-paused/);
+
+  // Click Resume
+  await btnToggle.click();
+  await expect(btnToggle).toHaveText('⏸ Pause');
+  await expect(timerContainer).not.toHaveClass(/timer-paused/);
+
+  // Time ticks down
+  await page.waitForTimeout(1500);
+  expect(await timer.textContent()).not.toBe('02:00:00');
+});
+
 test('PSI Portal - Task Navigation Bar in Left Pane and Header Cleanliness', async ({ page }) => {
   await page.goto('http://192.168.131.223:8090');
 
