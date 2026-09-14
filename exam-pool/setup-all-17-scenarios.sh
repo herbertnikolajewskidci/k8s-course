@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Global Exam Setup Script: Provisions all 17 Killer.sh-parity exam scenarios
-# in isolated namespaces, directories, and paths on cka-exam-runner.
+# Global Exam Setup Script (V2): Provisions all 17 authentic Killer.sh-parity
+# exam scenarios on cka-exam-runner and cka-worker1.
+# Zero spoilers, real multi-layering, and accurate CKA standards.
 
 set -euo pipefail
 
 echo "================================================================="
-echo "=== [CKA Exam Setup] Provisioning All 17 Real Exam Scenarios ==="
+echo "=== [CKA Exam Setup V2] Provisioning 17 Authentic Scenarios  ==="
 echo "================================================================="
 
 # -------------------------------------------------------------
@@ -52,11 +53,10 @@ spec:
         image: nginx:1-alpine
         ports:
         - containerPort: 8200
-        resources:
-          requests:
-            cpu: 10m
-            memory: 20Mi
----
+EOF
+
+if ! kubectl get pod monitor-agent -n monitoring >/dev/null 2>&1; then
+  cat << 'EOF' | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
@@ -68,11 +68,14 @@ spec:
   containers:
   - name: agent
     image: nginx:1-alpine
-    resources:
-      requests:
-        cpu: 10m
-        memory: 20Mi
----
+    ports:
+    - containerPort: 80
+EOF
+fi
+
+# Only create broken ConfigMap and deployment if not already working
+if ! kubectl get configmap router-endpoints -n core-routing >/dev/null 2>&1; then
+  cat << 'EOF' | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -80,9 +83,9 @@ metadata:
   namespace: core-routing
 data:
   ENDPOINT_CORE: "kubernetes"
-  ENDPOINT_STORAGE: "storage-vault"
-  ENDPOINT_PRIMARY_POD: "vault-0"
-  ENDPOINT_MONITOR: "10.244.1.88"
+  ENDPOINT_STORAGE: "storage-vault.storage-tier"
+  ENDPOINT_PRIMARY_POD: "vault-0.storage-tier"
+  ENDPOINT_MONITOR: "monitor-agent.monitoring"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -101,28 +104,27 @@ spec:
     spec:
       containers:
       - name: router
-        image: busybox:latest
+        image: curlimages/curl
         command:
-        - sh
+        - /bin/sh
         - -c
         - |
-          echo "Checking endpoints..."
-          nslookup "$ENDPOINT_CORE" || echo "FAILED_CORE"
-          nslookup "$ENDPOINT_STORAGE" || echo "FAILED_STORAGE"
-          nslookup "$ENDPOINT_PRIMARY_POD" || echo "FAILED_POD"
-          nslookup "$ENDPOINT_MONITOR" || echo "FAILED_MONITOR"
-          sleep 3600
+          while true; do
+            echo "--- Resolving Endpoints ---"
+            nslookup ${ENDPOINT_CORE} || echo "FAIL: ENDPOINT_CORE"
+            nslookup ${ENDPOINT_STORAGE} || echo "FAIL: ENDPOINT_STORAGE"
+            nslookup ${ENDPOINT_PRIMARY_POD} || echo "FAIL: ENDPOINT_PRIMARY_POD"
+            nslookup ${ENDPOINT_MONITOR} || echo "FAIL: ENDPOINT_MONITOR"
+            sleep 10
+          done
         envFrom:
         - configMapRef:
             name: router-endpoints
-        resources:
-          requests:
-            cpu: 10m
-            memory: 20Mi
 EOF
+fi
 
 # -------------------------------------------------------------
-# Q2: Kubeconfig Extraction & Contexts (/course/2/)
+# Q2: Kubeconfig Extraction (/course/2/)
 # -------------------------------------------------------------
 echo "--> Setting up Q2 (Kubeconfig & Context Extraction)..."
 mkdir -p /course/2/
@@ -145,29 +147,25 @@ clusters:
 contexts:
 - context:
     cluster: production-cluster
-    user: account-0099
+    user: account-0042
   name: prod-context
 - context:
     cluster: staging-cluster
-    user: account-0042
+    user: account-0012
   name: staging-context
 - context:
     cluster: dev-cluster
-    user: account-0013
+    user: developer
   name: dev-context
-current-context: staging-context
+current-context: prod-context
 users:
 - name: account-0042
   user:
-    client-certificate-data: Q0tBLVJFVFlJTkctQ0xJRU5ULUNFUlQtREVDT0RFRC1PMEs=
-- name: account-0099
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJrakNDQVRxZ0F3SUJBZ0lVUkc3bE1rd251a3h5d21tK25qK0JqV1d0ZzBVd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0V6RVJNQThHQTFVRUNnd0lTSEZpWld4bGNpMVpibVJwYm1jd0hoY05Nall3T1RFME1ERXlNRFkyV2hjTgpNall3T1RFNE1ERXlNRFkyV2pBNk1RNHdEQVlEVlFRS0RBVlNiM0psTFhkdmNtdHdiMkZ5ZEVBeEZEQVNCZ05WCkJBTU1DMkZqWTI5MWJuUXRNREF3TkRJd2dnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUIKQVFDUG4vL3gvZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+- name: account-0012
   user:
-    client-certificate-data: UFJPRC1DRVJUSUZJQ0FURS1EQVRBCg==
-- name: account-0013
-  user:
-    client-certificate-data: REVWLUNFUlRJRklDQVRFLURBVEEK
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCg==
 EOF
-chmod 644 /course/2/kubeconfig
 
 # -------------------------------------------------------------
 # Q3: Multi-Container Pod & Downward API (project-tiger)
@@ -176,36 +174,16 @@ echo "--> Setting up Q3 (Multi-Container Pod & Downward API)..."
 kubectl create ns project-tiger --dry-run=client -o yaml | kubectl apply -f -
 
 # -------------------------------------------------------------
-# Q4: Cross-Pod ReadinessProbe with wget (project-alpha)
+# Q4: Cross-Pod HTTP ReadinessProbe with wget (project-alpha)
+# Service exists without endpoints; candidate deploys probe & backend pod
 # -------------------------------------------------------------
-echo "--> Setting up Q4 (Readiness Probe with wget)..."
+echo "--> Setting up Q4 (Cross-Pod ReadinessProbe)..."
 kubectl create ns project-alpha --dry-run=client -o yaml | kubectl apply -f -
+# Clean up any leftover backend pod from previous runs
+kubectl delete pod backend-pod -n project-alpha --ignore-not-found=true 2>/dev/null || true
+kubectl delete deployment backend-service -n project-alpha --ignore-not-found=true 2>/dev/null || true
+
 cat << 'EOF' | kubectl apply -f -
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: backend-service
-  namespace: project-alpha
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: backend-service
-  template:
-    metadata:
-      labels:
-        app: backend-service
-    spec:
-      containers:
-      - name: web
-        image: nginx:1-alpine
-        ports:
-        - containerPort: 80
-        resources:
-          requests:
-            cpu: 10m
-            memory: 20Mi
----
 apiVersion: v1
 kind: Service
 metadata:
@@ -220,25 +198,44 @@ spec:
 EOF
 
 # -------------------------------------------------------------
-# Q5: Kubelet PKI & OpenSSL Zertifikatsprüfung (/var/lib/kubelet/pki/)
+# Q5: Kubelet PKI & OpenSSL Certificate Inspection (/course/5/)
 # -------------------------------------------------------------
-echo "--> Setting up Q5 (Kubelet PKI & OpenSSL Inspection)..."
+echo "--> Setting up Q5 (Kubelet PKI Inspection directory)..."
 mkdir -p /course/5/
 
 # -------------------------------------------------------------
-# Q6: Kubelet Systemd Drop-In Troubleshooting
+# Q6: Kubelet Systemd Drop-in backup
 # -------------------------------------------------------------
-echo "--> Setting up Q6 (Kubelet Systemd Drop-in backup)..."
+echo "--> Setting up Q6 (Kubelet Systemd Drop-in)..."
 mkdir -p /course/6/
 
 # -------------------------------------------------------------
 # Q7: Gateway API & HTTPRoute (gateway-infra)
 # -------------------------------------------------------------
-echo "--> Setting up Q7 (Gateway API & HTTPRoute CRDs)..."
+echo "--> Setting up Q7 (Gateway API & HTTPRoute)..."
 kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/standard-install.yaml 2>/dev/null || true
 kubectl create ns gateway-infra --dry-run=client -o yaml | kubectl apply -f -
 
 cat << 'EOF' | kubectl apply -f -
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: standard-gateway-class
+spec:
+  controllerName: "example.com/gateway-controller"
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: app-gateway
+  namespace: gateway-infra
+spec:
+  gatewayClassName: standard-gateway-class
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -311,7 +308,7 @@ spec:
 EOF
 
 # -------------------------------------------------------------
-# Q8: NetworkPolicy Ingress & Egress Isolation (secure-zone)
+# Q8: NetworkPolicy Ingress Isolation (secure-zone)
 # -------------------------------------------------------------
 echo "--> Setting up Q8 (NetworkPolicy Isolation)..."
 kubectl create ns secure-zone --dry-run=client -o yaml | kubectl apply -f -
@@ -334,14 +331,10 @@ spec:
         role: backend
     spec:
       containers:
-      - name: nginx
+      - name: web
         image: nginx:1-alpine
         ports:
         - containerPort: 80
-        resources:
-          requests:
-            cpu: 10m
-            memory: 20Mi
 ---
 apiVersion: v1
 kind: Service
@@ -373,8 +366,6 @@ kind: Pod
 metadata:
   name: blocked-client
   namespace: external-zone
-  labels:
-    role: attacker
 spec:
   containers:
   - name: curl
@@ -383,16 +374,109 @@ spec:
 EOF
 
 # -------------------------------------------------------------
-# Q9: Manual Scheduling with nodeName (/course/9/)
+# Q9: Kustomize Overlays & HPA (/course/9/api-service)
 # -------------------------------------------------------------
-echo "--> Setting up Q9 (Manual Scheduling)..."
-kubectl create ns manual-schedule --dry-run=client -o yaml | kubectl apply -f -
+echo "--> Setting up Q9 (Kustomize Structure & Legacy ConfigMap)..."
+kubectl create ns staging-zone --dry-run=client -o yaml | kubectl apply -f -
+kubectl create ns prod-zone --dry-run=client -o yaml | kubectl apply -f -
+
+# Pre-create legacy configmaps to be deleted by candidate
+kubectl create configmap legacy-scaling-config --from-literal=legacy_threshold=75% -n staging-zone --dry-run=client -o yaml | kubectl apply -f -
+kubectl create configmap legacy-scaling-config --from-literal=legacy_threshold=75% -n prod-zone --dry-run=client -o yaml | kubectl apply -f -
+
+mkdir -p /course/9/api-service/base/
+mkdir -p /course/9/api-service/staging/
+mkdir -p /course/9/api-service/prod/
+
+cat << 'EOF' > /course/9/api-service/base/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-service
+  template:
+    metadata:
+      labels:
+        app: api-service
+    spec:
+      containers:
+      - name: web
+        image: nginx:1-alpine
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+EOF
+
+cat << 'EOF' > /course/9/api-service/base/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+spec:
+  selector:
+    app: api-service
+  ports:
+  - port: 80
+    targetPort: 80
+EOF
+
+cat << 'EOF' > /course/9/api-service/base/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- deployment.yaml
+- service.yaml
+EOF
+
+cat << 'EOF' > /course/9/api-service/staging/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: staging-zone
+resources:
+- ../base
+EOF
+
+cat << 'EOF' > /course/9/api-service/prod/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: prod-zone
+resources:
+- ../base
+EOF
 
 # -------------------------------------------------------------
 # Q10: StorageClass Dynamic Provisioning & WaitForFirstConsumer
 # -------------------------------------------------------------
-echo "--> Setting up Q10 (StorageClass & PVC)..."
+echo "--> Setting up Q10 (StorageClass, Local Path & Job Manifest)..."
+# Ensure local-path-provisioner is present
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.30/deploy/local-path-storage.yaml 2>/dev/null || true
 kubectl create ns project-bern --dry-run=client -o yaml | kubectl apply -f -
+mkdir -p /course/10/
+
+cat << 'EOF' > /course/10/data-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-job
+  namespace: project-bern
+spec:
+  template:
+    metadata:
+      labels:
+        app: data-job
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: worker
+        image: busybox:latest
+        command: ["sh", "-c", "echo 'Batch job processed data' > /mnt/job-data/output.log && sleep 5"]
+        # Candidate mounts PVC job-pvc at /mnt/job-data
+EOF
 
 # -------------------------------------------------------------
 # Q11: PV/PVC Recovery with Retain Policy (storage-recovery)
@@ -431,8 +515,8 @@ spec:
       storage: 500Mi
 EOF
 
-# Lösche den alten Claim künstlich, damit das PV in "Released" verfällt
-sleep 2
+# Delete claim to transition PV into Released
+sleep 1
 kubectl delete pvc old-pvc -n storage-recovery --wait=true 2>/dev/null || true
 
 # -------------------------------------------------------------
@@ -457,8 +541,35 @@ mkdir -p /var/lib/etcd-restore/
 # -------------------------------------------------------------
 # Q15: Node Maintenance (Drain & Cordon)
 # -------------------------------------------------------------
-echo "--> Setting up Q15 (Node Maintenance namespace)..."
+echo "--> Setting up Q15 (Node Maintenance drill)..."
 kubectl create ns maintenance-drill --dry-run=client -o yaml | kubectl apply -f -
+
+cat << 'EOF' | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-drain-test
+  namespace: maintenance-drill
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: drain-test
+  template:
+    metadata:
+      labels:
+        app: drain-test
+    spec:
+      containers:
+      - name: app
+        image: nginx:1-alpine
+        volumeMounts:
+        - name: local-storage
+          mountPath: /data
+      volumes:
+      - name: local-storage
+        emptyDir: {}
+EOF
 
 # -------------------------------------------------------------
 # Q16: Pending Pod Forensik (wp-forensics)
@@ -493,11 +604,39 @@ spec:
 EOF
 
 # -------------------------------------------------------------
-# Q17: PriorityClass & Pod Preemption (high-priority-zone)
+# Q17: crictl Low-Level Container Inspection & Logs (project-tiger)
 # -------------------------------------------------------------
-echo "--> Setting up Q17 (PriorityClass & Preemption)..."
-kubectl create ns priority-zone --dry-run=client -o yaml | kubectl apply -f -
+echo "--> Setting up Q17 (crictl Telemetry Pod & Directory)..."
+mkdir -p /course/17/
+
+cat << 'EOF' | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tiger-telemetry
+  namespace: project-tiger
+  labels:
+    app: tiger-telemetry
+spec:
+  nodeName: cka-worker1
+  containers:
+  - name: telemetry-agent
+    image: busybox:latest
+    command:
+    - /bin/sh
+    - -c
+    - |
+      while true; do
+        echo "[$(date -u +'%Y-%m-%dT%H:%M:%SZ')] TELEMETRY STATUS OK: subsystem active"
+        sleep 3
+      done
+EOF
+
+# Ensure /course directories are writable by candidate
+mkdir -p /course
+chown -R cka-admin:cka-admin /course 2>/dev/null || true
+chmod -R 775 /course 2>/dev/null || true
 
 echo "================================================================="
-echo "=== [CKA Exam Setup] SUCCESS: All 17 Scenarios Ready in Cluster =="
+echo "=== [CKA Exam Setup V2] SUCCESS: All 17 Scenarios Ready!      ==="
 echo "================================================================="

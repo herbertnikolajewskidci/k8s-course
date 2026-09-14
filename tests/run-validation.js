@@ -137,7 +137,7 @@ async function run() {
     // Next button click -> Question 2
     await btnNext.click();
     assert.strictEqual(await taskNumber.textContent(), 'Question 2 of 17');
-    assert.ok((await taskTitle.textContent()).includes('Scale Deployment'), 'Question 2 loaded');
+    assert.ok((await taskTitle.textContent()).includes('Kubeconfig'), 'Question 2 loaded');
     assert.strictEqual(await btnPrev.isEnabled(), true, 'Prev button enabled on question 2');
 
     // Keyboard navigation: ArrowLeft -> Question 1, ArrowRight -> Question 2
@@ -147,11 +147,11 @@ async function run() {
     assert.strictEqual(await taskNumber.textContent(), 'Question 2 of 17', 'ArrowRight navigates to Question 2');
     console.log('✅ Ticket 4: Keyboard navigation (ArrowLeft / ArrowRight) functions correctly.');
 
-    // Dropdown jump -> Question 11 (etcdutl restore)
-    await select.selectOption('10'); // Index 10 is Question 11
-    assert.strictEqual(await taskNumber.textContent(), 'Question 11 of 17');
-    const q11Body = await page.locator('#taskBody').textContent();
-    assert.ok(q11Body.includes('etcdutl snapshot restore'), 'Question 11 references etcdutl standard');
+    // Dropdown jump -> Question 14 (etcdutl restore)
+    await select.selectOption('13'); // Index 13 is Question 14
+    assert.strictEqual(await taskNumber.textContent(), 'Question 14 of 17');
+    const q14Body = await page.locator('#taskBody').textContent();
+    assert.ok(q14Body.includes('etcdutl snapshot restore'), 'Question 14 references etcdutl standard');
 
     // Dropdown jump -> Question 17 (last)
     await select.selectOption('16'); // Index 16 is Question 17
@@ -168,7 +168,7 @@ async function run() {
     await select.selectOption('0'); // Return to Question 1
     const contextCode = page.locator('.context-box code');
     const codeText = await contextCode.textContent();
-    assert.strictEqual(codeText.trim(), 'kubectl config use-context k8s');
+    assert.strictEqual(codeText.trim(), 'ssh cka6016');
 
     await contextCode.click();
 
@@ -182,7 +182,7 @@ async function run() {
     const toastClass = await toast.getAttribute('class');
     assert.ok(toastClass.includes('show'), 'Toast must receive "show" class');
     const toastContent = await toast.textContent();
-    assert.ok(toastContent.includes('kubectl config use-context k8s'), 'Toast confirms copied command');
+    assert.ok(toastContent.includes('ssh cka6016'), 'Toast confirms copied command');
     console.log('✅ AC 4: Click-to-copy triggers immediate visual feedback and toast notification.');
 
     // 5. Splitter Dragging & Mouse-Trap Protection
@@ -237,27 +237,27 @@ async function run() {
     assert.ok(pillsCountQ1 >= 1, `Question 1 must have at least 1 doc helper pill (found ${pillsCountQ1})`);
 
     const q1DocTitle = await pillsQ1.first().locator('.doc-pill-text').textContent();
-    assert.strictEqual(q1DocTitle, 'Assigning Pods to Nodes', 'First doc pill title matches');
+    assert.strictEqual(q1DocTitle, 'DNS for Services and Pods', 'First doc pill title matches');
     const q1DocUrl = await pillsQ1.first().getAttribute('data-url');
-    assert.ok(q1DocUrl.includes('kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node'), 'Doc URL is official k8s doc link');
+    assert.ok(q1DocUrl.includes('kubernetes.io/docs/concepts/services-networking/dns-pod-service'), 'Doc URL is official k8s doc link');
 
-    // Verify Question 4 (Ingress) and Question 11 (etcd) have doc pills
+    // Verify Question 4 (ReadinessProbes) and Question 14 (etcd) have doc pills
     await select.selectOption('3'); // Question 4
     await page.locator('#taskBody .task-docs-container').waitFor({ state: 'visible' });
     const pillsQ4 = page.locator('#taskBody .task-docs-container .doc-pill-btn');
     assert.ok((await pillsQ4.count()) >= 1, 'Question 4 has doc helper pills');
     const q4DocTitle = await pillsQ4.first().locator('.doc-pill-text').textContent();
-    assert.strictEqual(q4DocTitle, 'Ingress', 'Question 4 first doc pill is Ingress');
+    assert.ok(q4DocTitle.includes('Probes'), 'Question 4 first doc pill is Probes');
 
-    await select.selectOption('10'); // Question 11
+    await select.selectOption('13'); // Question 14
     await page.locator('#taskBody .task-docs-container').waitFor({ state: 'visible' });
-    const pillsQ11 = page.locator('#taskBody .task-docs-container .doc-pill-btn');
-    assert.ok((await pillsQ11.count()) >= 1, 'Question 11 has doc helper pills');
-    const q11DocTitle = await pillsQ11.first().locator('.doc-pill-text').textContent();
-    assert.ok(q11DocTitle.includes('etcd'), 'Question 11 doc pill references etcd');
+    const pillsQ14 = page.locator('#taskBody .task-docs-container .doc-pill-btn');
+    assert.ok((await pillsQ14.count()) >= 1, 'Question 14 has doc helper pills');
+    const q14DocTitle = await pillsQ14.first().locator('.doc-pill-text').textContent();
+    assert.ok(q14DocTitle.includes('etcd'), 'Question 14 doc pill references etcd');
 
     // 7b. Click Doc Pill -> Backend API Call & Toast Feedback
-    await select.selectOption('3'); // Question 4: Ingress
+    await select.selectOption('3'); // Question 4
     const ingressPill = page.locator('#taskBody .task-docs-container .doc-pill-btn').first();
 
     const [apiResponse] = await Promise.all([
@@ -267,7 +267,7 @@ async function run() {
 
     const apiJson = await apiResponse.json();
     assert.strictEqual(apiJson.success, true, 'API response must have success: true');
-    assert.ok(apiJson.url.includes('kubernetes.io/docs/concepts/services-networking/ingress/'), 'API received correct URL');
+    assert.ok(apiJson.url.includes('kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/'), 'API received correct URL');
     console.log(`✅ Ticket 5 API: /api/open-doc returned HTTP 200 with success: true for ${apiJson.url}`);
 
     // Verify Toast visual feedback
@@ -276,7 +276,7 @@ async function run() {
     const docToastClass = await docToast.getAttribute('class');
     assert.ok(docToastClass.includes('show'), 'Toast must be visible');
     const docToastContent = await docToast.textContent();
-    assert.ok(docToastContent.includes('Firefox') && docToastContent.includes('Ingress'), `Toast confirms dispatch to Firefox (was "${docToastContent}")`);
+    assert.ok(docToastContent.includes('Firefox') && docToastContent.includes('Probes'), `Toast confirms dispatch to Firefox (was "${docToastContent}")`);
     console.log(`✅ Ticket 5 UX: Toast feedback verified ("${docToastContent}")`);
 
     console.log('\n🎉 ALL ACCEPTANCE CRITERIA VERIFIED SUCCESSFULLY!');

@@ -1,5 +1,5 @@
-// CKA Official Simulation Exam - Authentic 17 Question Pool (V1)
-// 1:1 Parity to Killer.sh Subtasks, Multi-Layering, and PSI Exam Ergonomics.
+// CKA Official Simulation Exam - Authentic 17 Question Pool (V2)
+// Full Killer.sh Parity, Zero Spoilers, Real Multi-Layering, and PSI Exam Ergonomics.
 // All tasks use explicit SSH host instructions, Click-to-Copy, and live verified docs.
 
 window.QUESTIONS = [
@@ -27,7 +27,7 @@ window.QUESTIONS = [
 
       <p>In namespace <code>core-routing</code>, the deployment <code>service-router</code> acts as an internal gateway communicating with multiple cluster endpoints using strictly qualified Domain Name (FQDN) values.</p>
 
-      <p>The deployment relies on a ConfigMap named <code>router-endpoints</code> to resolve target addresses. Currently, entries are misconfigured or incomplete, preventing the application from running properly.</p>
+      <p>The deployment relies on a ConfigMap named <code>router-endpoints</code> to resolve target addresses. Currently, entries are misconfigured or incomplete, preventing the application from communicating with dependent services.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
@@ -38,10 +38,10 @@ window.QUESTIONS = [
             <li><code>ENDPOINT_CORE</code>: The service <code>kubernetes</code> in namespace <code>default</code>.</li>
             <li><code>ENDPOINT_STORAGE</code>: The headless service <code>storage-vault</code> in namespace <code>storage-tier</code>.</li>
             <li><code>ENDPOINT_PRIMARY_POD</code>: The Pod named <code>vault-0</code> backing the headless service in namespace <code>storage-tier</code> (IP-independent).</li>
-            <li><code>ENDPOINT_MONITOR</code>: The Pod <code>monitor-agent</code> in namespace <code>monitoring</code> (using its actual pod IP in FQDN-dash format).</li>
+            <li><code>ENDPOINT_MONITOR</code>: The Pod <code>monitor-agent</code> in namespace <code>monitoring</code> (resolve its active Pod IP via DNS).</li>
           </ul>
         </li>
-        <li>Restart the deployment <code>service-router</code> in namespace <code>core-routing</code> (<code>kubectl rollout restart</code>).</li>
+        <li>Ensure the deployment <code>service-router</code> picks up the configuration changes.</li>
         <li>Verify that all replicas transition to <code>Running</code> and their logs confirm successful resolution of all 4 endpoints.</li>
       </ul>
 
@@ -74,7 +74,7 @@ window.QUESTIONS = [
         <li>SSH into the assigned host: <code>ssh cka9412</code>.</li>
         <li>Extract the names of all contexts defined in <code>/course/2/kubeconfig</code> and save them into <code>/course/2/contexts</code> (one context name per line).</li>
         <li>Extract the name of the current active context into <code>/course/2/current-context</code>.</li>
-        <li>Extract the raw client certificate data for user <code>account-0042</code>, decode the base64 content, and write the decoded string directly into <code>/course/2/cert</code>.</li>
+        <li>Extract the raw client certificate data for user <code>account-0042</code>, decode the base64 content, and write the decoded certificate string into <code>/course/2/cert</code>.</li>
       </ul>
 
       <h4>Verification:</h4>
@@ -113,7 +113,7 @@ window.QUESTIONS = [
             <li>Container 2: Named <code>consumer</code>, using image <code>busybox:latest</code>. It must stream output from <code>/var/log/app/events.log</code> using <code>tail -f</code>.</li>
           </ul>
         </li>
-        <li>Inject the node name hosting the Pod into the <code>producer</code> container as an environment variable named <code>HOST_NODE</code> using the Kubernetes <strong>Downward API</strong> (<code>spec.nodeName</code>).</li>
+        <li>Inject the name of the node on which the Pod is scheduled into the <code>producer</code> container as an environment variable named <code>HOST_NODE</code> using the Kubernetes <strong>Downward API</strong>.</li>
         <li>Ensure both containers start cleanly and logs of the <code>consumer</code> container show active events.</li>
       </ul>
 
@@ -124,7 +124,7 @@ window.QUESTIONS = [
   {
     id: 4,
     weight: 7,
-    title: "Cross-Pod HTTP ReadinessProbe with wget",
+    title: "Cross-Pod HTTP ReadinessProbe & Service Endpoint Resolution",
     host: "ssh cka3200",
     docs: [
       {
@@ -139,30 +139,25 @@ window.QUESTIONS = [
         <code>ssh cka3200</code>
       </div>
 
-      <p>In namespace <code>project-alpha</code>, an existing backend service <code>backend-service</code> is running. Deploy a monitoring client Pod named <code>probe-checker</code> in the same namespace.</p>
+      <p>In namespace <code>project-alpha</code>, a ClusterIP Service named <code>backend-service</code> is configured on port <code>80</code>, but currently has no active endpoints.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>Create Pod <code>probe-checker</code> in namespace <code>project-alpha</code> using image <code>busybox:latest</code>.</li>
-        <li>The container command should keep the pod running: <code>sh -c "sleep 3600"</code>.</li>
-        <li>Configure an <code>exec</code> based <code>readinessProbe</code> that verifies HTTP availability of the backend service:
-          <ul>
-            <li>Command: <code>sh -c "wget -qO- http://backend-service:80"</code>.</li>
-            <li><code>initialDelaySeconds</code>: <code>5</code>.</li>
-            <li><code>periodSeconds</code>: <code>5</code>.</li>
-          </ul>
-        </li>
-        <li>Ensure the Pod becomes <code>1/1 Ready</code> once the backend responds successfully.</li>
+        <li>Create a monitoring Pod named <code>probe-checker</code> in namespace <code>project-alpha</code> using image <code>busybox:latest</code> running an idle process (e.g. <code>sleep 3600</code>).</li>
+        <li>Configure an <code>exec</code> based <code>readinessProbe</code> on <code>probe-checker</code> that periodically tests HTTP reachability of <code>backend-service</code> on port 80 using <code>wget</code>.</li>
+        <li>Confirm that <code>probe-checker</code> initially stays in status <code>0/1 Ready</code> (Not Ready) because the backend service is not yet answering.</li>
+        <li>Create a backend Pod named <code>backend-pod</code> in namespace <code>project-alpha</code> with image <code>nginx:1-alpine</code>. Ensure it has the matching labels required by <code>backend-service</code> so traffic is routed to it.</li>
+        <li>Verify that <code>backend-service</code> gains an endpoint and <code>probe-checker</code> automatically transitions to <code>1/1 Ready</code>.</li>
       </ul>
 
       <h4>Verification:</h4>
-      <pre><code>kubectl get pod probe-checker -n project-alpha</code></pre>
+      <pre><code>kubectl get pods -n project-alpha && kubectl describe svc backend-service -n project-alpha</code></pre>
     `
   },
   {
     id: 5,
-    weight: 4,
-    title: "Kubelet PKI & OpenSSL Certificate Expiration Inspection",
+    weight: 6,
+    title: "Kubelet PKI & OpenSSL Certificate Audit",
     host: "ssh cka5248",
     docs: [
       {
@@ -174,32 +169,33 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka5248</code>
+        <code>ssh cka5248</code> (Worker: <code>ssh cka5248-node1</code>)
       </div>
 
-      <p>Security compliance requires auditing the active client certificate utilized by the local Kubelet service.</p>
+      <p>Security compliance requires auditing active Kubelet certificates on worker node <code>cka5248-node1</code> located under <code>/var/lib/kubelet/pki/</code>.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>Inspect the active Kubelet client certificate located under <code>/var/lib/kubelet/pki/</code>.</li>
-        <li>Determine which file is the active client certificate (follow symlinks if present).</li>
-        <li>Using <code>openssl x509</code>:
+        <li>SSH into the worker node: <code>ssh cka5248-node1</code>.</li>
+        <li>Inspect the active certificate files in <code>/var/lib/kubelet/pki/</code>.</li>
+        <li>Identify:
           <ul>
-            <li>Write the certificate <strong>Issuer</strong> into <code>/course/5/issuer.txt</code>.</li>
-            <li>Write the certificate <strong>Not After</strong> (expiration date) into <code>/course/5/expiration.txt</code>.</li>
-            <li>Write the <strong>Subject</strong> Common Name (CN) into <code>/course/5/subject.txt</code>.</li>
+            <li>The active Kubelet <strong>Client Certificate</strong> (used for outgoing connections to kube-apiserver).</li>
+            <li>The active Kubelet <strong>Server Certificate</strong> (used for incoming serving requests).</li>
           </ul>
         </li>
+        <li>Using <code>openssl x509</code>, extract the <strong>Issuer</strong> and <strong>Extended Key Usage</strong> for both certificates.</li>
+        <li>Save the structured findings into <code>/course/5/certificate-info.txt</code> on the control-plane host.</li>
       </ul>
 
       <h4>Verification:</h4>
-      <pre><code>cat /course/5/issuer.txt && cat /course/5/expiration.txt && cat /course/5/subject.txt</code></pre>
+      <pre><code>cat /course/5/certificate-info.txt</code></pre>
     `
   },
   {
     id: 6,
     weight: 7,
-    title: "Kubelet Systemd Drop-In Unit & Service Crash Troubleshooting",
+    title: "Kubelet Service Crash & Node Troubleshooting",
     host: "ssh cka1024",
     docs: [
       {
@@ -214,27 +210,25 @@ window.QUESTIONS = [
         <code>ssh cka1024</code>
       </div>
 
-      <p>A recent operational update corrupted the Kubelet service configuration on this worker node, causing Kubelet to enter a failure loop (status 203/EXEC) and leaving the node in <code>NotReady</code> state on the cluster.</p>
+      <p>Worker node <code>cka1024</code> is reporting status <code>NotReady</code> in the cluster because its Kubelet service fails to run.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
         <li>SSH into the affected node: <code>ssh cka1024</code>.</li>
-        <li>Investigate Kubelet service failures using <code>systemctl status kubelet</code> and <code>journalctl -u kubelet</code>.</li>
-        <li>Inspect drop-in configuration units under <code>/usr/lib/systemd/system/kubelet.service.d/</code>.</li>
-        <li>Resolve the misconfiguration (fix the broken binary path in <code>10-kubeadm.conf</code>).</li>
-        <li>Reload systemd unit definitions (<code>sudo systemctl daemon-reload</code>) and restart Kubelet (<code>sudo systemctl restart kubelet</code>).</li>
-        <li>Verify that Kubelet returns to <code>active (running)</code> state via <code>systemctl is-active kubelet</code>.</li>
-        <li>Exit back to the student shell (<code>exit</code>) and verify from the main environment that the node transitions back to <code>Ready</code>.</li>
+        <li>Investigate why the Kubelet service fails to start.</li>
+        <li>Resolve the underlying configuration failure and ensure Kubelet is active and running.</li>
+        <li>Ensure system configuration changes persist across service restarts.</li>
+        <li>Exit back to the student environment and verify from the control-plane that node <code>cka1024</code> returns to <code>Ready</code>.</li>
       </ul>
 
-      <h4>Verification (on the node, then on student-node):</h4>
-      <pre><code>systemctl is-active kubelet # on cka1024, then exit and run: kubectl get nodes</code></pre>
+      <h4>Verification:</h4>
+      <pre><code>systemctl is-active kubelet # on node, then exit and run: kubectl get nodes</code></pre>
     `
   },
   {
     id: 7,
-    weight: 6,
-    title: "Gateway API & HTTPRoute Host- and Path-Based Routing",
+    weight: 7,
+    title: "Gateway API & HTTPRoute Host, Path & Header Routing",
     host: "ssh cka7968",
     docs: [
       {
@@ -253,19 +247,21 @@ window.QUESTIONS = [
         <code>ssh cka7968</code>
       </div>
 
-      <p>In namespace <code>gateway-infra</code>, services <code>web-v1-svc</code> and <code>web-v2-svc</code> are running. Configure an <code>HTTPRoute</code> named <code>traffic-splitter</code>.</p>
+      <p>In namespace <code>gateway-infra</code>, services <code>web-v1-svc</code> and <code>web-v2-svc</code> are running on port <code>8080</code>. Gateway <code>app-gateway</code> is deployed.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
         <li>Create an <code>HTTPRoute</code> named <code>traffic-splitter</code> in namespace <code>gateway-infra</code>.</li>
-        <li>Attach the route to the existing Gateway named <code>app-gateway</code> in the same namespace.</li>
-        <li>Configure host matching for <code>api.example.com</code>:
+        <li>Attach the route to the existing Gateway named <code>app-gateway</code> in namespace <code>gateway-infra</code>.</li>
+        <li>Configure host matching for hostname <code>api.example.com</code>:
           <ul>
             <li>Path prefix <code>/v1</code> must forward to service <code>web-v1-svc</code> on port <code>8080</code>.</li>
             <li>Path prefix <code>/v2</code> must forward to service <code>web-v2-svc</code> on port <code>8080</code>.</li>
+            <li>Path prefix <code>/mobile</code> with request header <code>User-Agent: mobile</code> (Exact match) must forward to service <code>web-v2-svc</code> on port <code>8080</code>.</li>
+            <li>Path prefix <code>/mobile</code> without that header (fallback) must forward to service <code>web-v1-svc</code> on port <code>8080</code>.</li>
           </ul>
         </li>
-        <li>Verify the manifest syntax with <code>kubectl apply --dry-run=client</code> before committing.</li>
+        <li>Verify that the manifest applies without errors.</li>
       </ul>
 
       <h4>Verification:</h4>
@@ -275,7 +271,7 @@ window.QUESTIONS = [
   {
     id: 8,
     weight: 7,
-    title: "NetworkPolicy Ingress & Egress Isolation (Default Deny & Granular Allow)",
+    title: "NetworkPolicy Ingress Isolation (Default Deny & Granular Allow)",
     host: "ssh cka2560",
     docs: [
       {
@@ -297,11 +293,11 @@ window.QUESTIONS = [
         <li>Create a NetworkPolicy named <code>backend-policy</code> in namespace <code>secure-zone</code> protecting pods labeled <code>role=backend</code>:
           <ul>
             <li>Deny all ingress traffic by default.</li>
-            <li>Allow ingress TCP traffic on port <code>80</code> <strong>only</strong> from Pods labeled <code>role=frontend</code> within the same namespace.</li>
-            <li>Explicitly deny traffic originating from namespace <code>external-zone</code>.</li>
+            <li>Allow ingress TCP traffic on port <code>80</code> <strong>only</strong> from Pods labeled <code>role=frontend</code> within the same namespace (<code>secure-zone</code>).</li>
+            <li>Ensure all other incoming traffic (including traffic originating from namespace <code>external-zone</code>) is blocked.</li>
           </ul>
         </li>
-        <li>Test connectivity:
+        <li>Test and confirm network connectivity:
           <ul>
             <li><code>kubectl exec -n secure-zone allowed-client -- curl -s -m 2 http://secure-backend:80</code> (Must succeed).</li>
             <li><code>kubectl exec -n external-zone blocked-client -- curl -s -m 2 http://secure-backend.secure-zone:80</code> (Must time out / fail).</li>
@@ -315,38 +311,50 @@ window.QUESTIONS = [
   },
   {
     id: 9,
-    weight: 5,
-    title: "Manual Pod Scheduling & Static Node Assignment (Bypass Scheduler)",
-    host: "ssh cka3200",
+    weight: 7,
+    title: "Kustomize Deployment with Overlays & HorizontalPodAutoscaler",
+    host: "ssh cka5774",
     docs: [
       {
-        title: "Assign Pods to Nodes manually",
-        url: "https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodename"
+        title: "Declarative Management with Kustomize",
+        url: "https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/"
+      },
+      {
+        title: "Horizontal Pod Autoscaling",
+        url: "https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/"
       }
     ],
     body: `
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka3200</code>
+        <code>ssh cka5774</code>
       </div>
 
-      <p>During a maintenance drill, the default scheduler may be non-operational. Deploy a Pod named <code>emergency-web</code> in namespace <code>manual-schedule</code>.</p>
+      <p>In directory <code>/course/9/api-service/</code>, an application is managed using Kustomize with <code>base</code>, <code>staging</code>, and <code>prod</code> overlays.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>Create Pod <code>emergency-web</code> in namespace <code>manual-schedule</code> with image <code>nginx:1-alpine</code>.</li>
-        <li>Bypass the Kubernetes scheduler entirely by manually binding the Pod directly to node <code>cka-exam-runner</code> using the <code>spec.nodeName</code> field.</li>
-        <li>Verify that the Pod transitions immediately to <code>Running</code> without receiving events from <code>default-scheduler</code>.</li>
+        <li>In <code>/course/9/api-service/base/</code>, configure a HorizontalPodAutoscaler named <code>api-hpa</code> targeting Deployment <code>api-service</code>:
+          <ul>
+            <li>Minimum replicas: <code>2</code>, Maximum replicas: <code>4</code>.</li>
+            <li>Target average CPU utilization: <code>50%</code>.</li>
+            <li>Register the HPA manifest in <code>base/kustomization.yaml</code>.</li>
+          </ul>
+        </li>
+        <li>In <code>/course/9/api-service/prod/</code>, add a patch for <code>api-hpa</code> that increases <code>maxReplicas</code> to <code>6</code>. Ensure the patch is included in <code>prod/kustomization.yaml</code>.</li>
+        <li>Deploy the <code>staging</code> overlay into namespace <code>staging-zone</code> using <code>kubectl apply -k</code>.</li>
+        <li>Deploy the <code>prod</code> overlay into namespace <code>prod-zone</code> using <code>kubectl apply -k</code>.</li>
+        <li>Manually delete the legacy ConfigMap <code>legacy-scaling-config</code> in both namespaces (<code>staging-zone</code> and <code>prod-zone</code>) if present.</li>
       </ul>
 
       <h4>Verification:</h4>
-      <pre><code>kubectl get pod emergency-web -n manual-schedule -o wide</code></pre>
+      <pre><code>kubectl get hpa -n staging-zone && kubectl get hpa -n prod-zone</code></pre>
     `
   },
   {
     id: 10,
-    weight: 5,
+    weight: 6,
     title: "StorageClass Dynamic Provisioning with WaitForFirstConsumer",
     host: "ssh cka8448",
     docs: [
@@ -368,17 +376,19 @@ window.QUESTIONS = [
       <ul>
         <li>Create a StorageClass named <code>delayed-storage</code>:
           <ul>
-            <li>Provisioner: <code>rancher.io/local-path</code> (or standard cluster default).</li>
+            <li>Provisioner: <code>rancher.io/local-path</code>.</li>
             <li><code>volumeBindingMode</code>: <code>WaitForFirstConsumer</code>.</li>
             <li><code>reclaimPolicy</code>: <code>Delete</code>.</li>
           </ul>
         </li>
         <li>Create a PersistentVolumeClaim named <code>job-pvc</code> in namespace <code>project-bern</code> requesting <code>100Mi</code> using StorageClass <code>delayed-storage</code>.</li>
-        <li>Verify that the PVC remains in <code>Pending</code> state until a consumer Pod is created.</li>
+        <li>Confirm that <code>job-pvc</code> remains in status <code>Pending</code>.</li>
+        <li>Update the Job manifest at <code>/course/10/data-job.yaml</code> to mount PVC <code>job-pvc</code> at <code>/mnt/job-data</code> and apply the Job.</li>
+        <li>Verify that the volume is dynamically provisioned, the claim transitions to <code>Bound</code>, and the Job executes successfully.</li>
       </ul>
 
       <h4>Verification:</h4>
-      <pre><code>kubectl get sc delayed-storage && kubectl get pvc job-pvc -n project-bern</code></pre>
+      <pre><code>kubectl get sc delayed-storage && kubectl get pvc job-pvc -n project-bern && kubectl get job data-job -n project-bern</code></pre>
     `
   },
   {
@@ -399,12 +409,12 @@ window.QUESTIONS = [
         <code>ssh cka6016</code>
       </div>
 
-      <p>In namespace <code>storage-recovery</code>, a database volume <code>pv-retained-data</code> has its reclaim policy set to <code>Retain</code>. The original PVC was accidentally deleted, leaving the PV in <code>Released</code> state with data intact.</p>
+      <p>In namespace <code>storage-recovery</code>, a database volume <code>pv-retained-data</code> has its reclaim policy set to <code>Retain</code>. The original PVC was deleted, leaving the PV in <code>Released</code> state with critical data intact.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
         <li>Inspect <code>pv-retained-data</code> and observe its <code>Released</code> status.</li>
-        <li>Make the PersistentVolume available again for binding by removing its stale <code>claimRef</code> binding.</li>
+        <li>Make the PersistentVolume available again so that a new claim can bind to it.</li>
         <li>Create a new PersistentVolumeClaim named <code>recovered-pvc</code> in namespace <code>storage-recovery</code> requesting <code>500Mi</code> with accessMode <code>ReadWriteOnce</code> and storageClassName <code>manual</code>.</li>
         <li>Ensure the PVC transitions to <code>Bound</code> status against the existing <code>pv-retained-data</code> volume without losing existing disk data.</li>
       </ul>
@@ -415,13 +425,17 @@ window.QUESTIONS = [
   },
   {
     id: 12,
-    weight: 5,
+    weight: 6,
     title: "Secret Creation, Decryption & Volume SubPath Mounts",
     host: "ssh cka2560",
     docs: [
       {
         title: "Managing Secrets using kubectl",
         url: "https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/"
+      },
+      {
+        title: "Using Secrets as Files from a Pod",
+        url: "https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod"
       }
     ],
     body: `
@@ -443,7 +457,7 @@ window.QUESTIONS = [
         </li>
         <li>Create a Pod named <code>db-client</code> in namespace <code>secret-mgmt</code> with image <code>nginx:1-alpine</code>:
           <ul>
-            <li>Mount key <code>DB_PASS</code> as an individual file at <code>/etc/secrets/password.txt</code> using <code>volumeMounts.subPath</code> so that existing directory files are not overwritten.</li>
+            <li>Mount key <code>DB_PASS</code> directly as an individual file at <code>/etc/secrets/password.txt</code> without overwriting or hiding any pre-existing files in <code>/etc/secrets/</code>.</li>
             <li>Expose key <code>DB_USER</code> as an environment variable named <code>DATABASE_USER</code>.</li>
           </ul>
         </li>
@@ -514,7 +528,7 @@ window.QUESTIONS = [
       <ul>
         <li>SSH into control-plane node: <code>ssh cka3200</code>.</li>
         <li>Inspect <code>/etc/kubernetes/manifests/etcd.yaml</code> to identify TLS client credentials and endpoint configuration.</li>
-        <li>Create a snapshot using <code>etcdctl snapshot save</code> or <code>etcdutl</code> to destination <code>/course/14/backup/etcd-snapshot.db</code>.</li>
+        <li>Create a snapshot using <code>etcdctl snapshot save</code> to destination <code>/course/14/backup/etcd-snapshot.db</code>.</li>
         <li>Verify the snapshot status and save the formatted status output into <code>/course/14/backup/status.txt</code>.</li>
         <li>Simulate a restore command into alternate data directory <code>/var/lib/etcd-restore/</code> using <code>etcdutl snapshot restore</code>.</li>
       </ul>
@@ -525,7 +539,7 @@ window.QUESTIONS = [
   },
   {
     id: 15,
-    weight: 5,
+    weight: 6,
     title: "Node Maintenance: Safe Drain, Cordon & Workload Eviction",
     host: "ssh cka9412",
     docs: [
@@ -541,14 +555,15 @@ window.QUESTIONS = [
         <code>ssh cka9412</code>
       </div>
 
-      <p>Prepare the designated worker node for scheduled OS kernel patching.</p>
+      <p>Prepare worker node <code>cka-worker1</code> for scheduled operating system kernel patching.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>Safely drain node <code>cka-exam-runner</code> while ignoring DaemonSets and forcing eviction of Pods with local storage (<code>--ignore-daemonsets --delete-emptydir-data --force</code>).</li>
+        <li>Safely drain node <code>cka-worker1</code> so all workloads are evicted onto remaining nodes.</li>
+        <li>Ensure DaemonSet-managed pods do not block the operation and local pod data is handled appropriately.</li>
         <li>Verify that the node status reports <code>SchedulingDisabled</code>.</li>
-        <li>Once maintenance is complete, mark the node active and schedulable again using <code>kubectl uncordon</code>.</li>
-        <li>Confirm the node transitions back to <code>Ready</code> without scheduling restrictions.</li>
+        <li>Once maintenance is complete, mark the node schedulable again.</li>
+        <li>Confirm the node returns to <code>Ready</code> state without scheduling restrictions.</li>
       </ul>
 
       <h4>Verification:</h4>
@@ -564,6 +579,10 @@ window.QUESTIONS = [
       {
         title: "Assigning Pods to Nodes",
         url: "https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/"
+      },
+      {
+        title: "Taints and Tolerations",
+        url: "https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/"
       }
     ],
     body: `
@@ -577,9 +596,9 @@ window.QUESTIONS = [
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>Inspect the events of the pending Pods: <code>kubectl describe pod -n wp-forensics | tail -n 15</code>.</li>
-        <li>Do <strong>NOT</strong> modify resource requests or container limits in the deployment!</li>
-        <li>Identify whether the scheduling failure is caused by <code>Pod's node affinity/selector</code>, <code>PersistentVolume's node affinity</code>, or untolerated taints.</li>
+        <li>Investigate the scheduling constraints and event conditions of the pending Pods.</li>
+        <li>Do <strong>NOT</strong> modify resource requests or container limits in the deployment manifest!</li>
+        <li>Determine whether the scheduling failure is caused by node selectors, taints, or volume node affinities.</li>
         <li>Resolve the root cause at the cluster node level so that all replicas start and transition to <code>Running</code>.</li>
       </ul>
 
@@ -589,34 +608,39 @@ window.QUESTIONS = [
   },
   {
     id: 17,
-    weight: 4,
-    title: "PriorityClass Creation & Workload Preemption Verification",
-    host: "ssh cka8448",
+    weight: 7,
+    title: "Low-Level Container Forensics & Runtime Inspection with crictl",
+    host: "ssh cka2556",
     docs: [
       {
-        title: "Pod Priority and Preemption",
-        url: "https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/"
+        title: "Debugging Kubernetes nodes with crictl",
+        url: "https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/"
       }
     ],
     body: `
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka8448</code>
+        <code>ssh cka2556</code> (Worker: <code>ssh cka2556-node1</code>)
       </div>
 
-      <p>Establish workload priority policies in namespace <code>priority-zone</code>.</p>
+      <p>In namespace <code>project-tiger</code>, Pod <code>tiger-telemetry</code> is running on a cluster node.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>Create a non-preempting PriorityClass named <code>batch-priority</code> with value <code>500000</code> and <code>preemptionPolicy: Never</code>.</li>
-        <li>Create a high-priority PriorityClass named <code>critical-workload</code> with value <code>1000000</code> and <code>preemptionPolicy: PreemptLowerPriority</code>.</li>
-        <li>Create a Pod named <code>critical-app</code> in namespace <code>priority-zone</code> with image <code>nginx:1-alpine</code> referencing <code>priorityClassName: critical-workload</code>.</li>
-        <li>Verify the assigned priority value on the scheduled Pod.</li>
+        <li>Identify which node is currently hosting Pod <code>tiger-telemetry</code>.</li>
+        <li>SSH into that node (e.g. <code>ssh cka2556-node1</code>).</li>
+        <li>Using the container runtime CLI <code>crictl</code>:
+          <ul>
+            <li>Find the container ID of the application container.</li>
+            <li>Inspect the container and write its <code>runtimeType</code> (from <code>crictl inspect</code>) into <code>/course/17/runtime-type.txt</code> on the control-plane host.</li>
+            <li>Extract the container's logs using <code>crictl logs</code> and save them into <code>/course/17/container.log</code> on the control-plane host.</li>
+          </ul>
+        </li>
       </ul>
 
       <h4>Verification:</h4>
-      <pre><code>kubectl get pod critical-app -n priority-zone -o jsonpath='{.spec.priority}'</code></pre>
+      <pre><code>cat /course/17/runtime-type.txt && head -n 10 /course/17/container.log</code></pre>
     `
   }
 ];

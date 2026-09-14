@@ -55,6 +55,10 @@ agent **MUST automatically**:
 3. Read the latest learning record under `learning-records/`.
 4. Greet Herbert by directly stating the active issue, the current learning
    branch, and the immediate next task/lab file without asking for context.
+5. Check exam simulation readiness: Always recognize the centralized exam reset
+   script `exam-pool/reset-exam.sh` (deployed on `cka-runner` at
+   `/tmp/reset-exam.sh`) and be ready to reset the 17-question exam pool
+   without requiring Herbert to explain or re-read previous reset steps.
 
 ## Branching & Tagging Strategy
 
@@ -143,9 +147,15 @@ eigene, integrierte CKA-Prüfungssimulation im Repository:
   (Split-Screen-Portal, Webtop, Kubeadm-Cluster mit Master- und Worker-Nodes)
   läuft ausschließlich innerhalb dedizierter KVM-Virtual-Machines auf dem
   Unraid-Server (`192.168.131.223`).
-- **Snapshot & Reset-Garantie:** Der Cluster- und Desktop-Zustand muss vor jedem
-  Exam-Lauf über VM-Snapshots oder Reset-Skripte in einen sauberen Zustand
-  zurücksetzbar sein.
+- **Snapshot & Automated Reset Guarantee (`exam-pool/reset-exam.sh`):**
+  Cluster state is reset before any exam run via the automated reset script
+  located at `exam-pool/reset-exam.sh` (deployed on `cka-runner` at
+  `/tmp/reset-exam.sh`). Executing `ssh cka-runner '/tmp/reset-exam.sh'` wipes
+  all student solution files in `/course/`, corrupts Kubelet on `cka-worker1`
+  for Q6 (`status=203/EXEC`), resets Q1's ConfigMap and restarts rollout,
+  and restores all 17 scenarios to their pristine unsolved initial state.
+  All agents in new sessions must recognize and offer this reset script
+  without requiring Herbert to remind them.
 - **Lokaler Mac/OrbStack-Cluster:** Dient ausschließlich als schneller, lokaler
   Prototyping- und Syntax-Prüfstand, niemals als Ersatz für die vollwertige
   x86_64 KVM-Prüfungsumgebung auf Unraid.
