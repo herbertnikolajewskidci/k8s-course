@@ -65,15 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Set of flagged question indices (persists across question changes)
+  const flaggedQuestions = new Set();
+  const btnFlag = document.getElementById('btnFlag');
+
   // 2. Initialize Question Navigation & Dropdown
   function initQuestions() {
-    questionSelect.innerHTML = '';
-    questions.forEach((q, idx) => {
-      const opt = document.createElement('option');
-      opt.value = idx;
-      opt.textContent = `Question ${q.id} of ${questions.length}: ${q.title} (${q.weight}%)`;
-      questionSelect.appendChild(opt);
-    });
+    renderQuestionDropdown();
 
     questionSelect.addEventListener('change', (e) => {
       loadQuestion(parseInt(e.target.value, 10));
@@ -91,7 +89,41 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    if (btnFlag) {
+      btnFlag.addEventListener('click', () => {
+        toggleFlagCurrentQuestion();
+      });
+    }
+
     loadQuestion(0);
+  }
+
+  function renderQuestionDropdown() {
+    questionSelect.innerHTML = '';
+    questions.forEach((q, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      const isFlagged = flaggedQuestions.has(idx);
+      const flagPrefix = isFlagged ? '⚑ ' : '';
+      opt.textContent = `${flagPrefix}Question ${q.id} of ${questions.length}`;
+      questionSelect.appendChild(opt);
+    });
+    questionSelect.value = currentQuestionIndex;
+  }
+
+  function toggleFlagCurrentQuestion() {
+    if (flaggedQuestions.has(currentQuestionIndex)) {
+      flaggedQuestions.delete(currentQuestionIndex);
+      btnFlag.classList.remove('flagged');
+      btnFlag.querySelector('.flag-text').textContent = 'Flag';
+      showToast(`Question ${questions[currentQuestionIndex].id} unflagged`);
+    } else {
+      flaggedQuestions.add(currentQuestionIndex);
+      btnFlag.classList.add('flagged');
+      btnFlag.querySelector('.flag-text').textContent = 'Flagged';
+      showToast(`Question ${questions[currentQuestionIndex].id} flagged for review!`);
+    }
+    renderQuestionDropdown();
   }
 
   function loadQuestion(index) {
@@ -103,6 +135,17 @@ document.addEventListener('DOMContentLoaded', () => {
     taskWeight.textContent = `Weight: ${q.weight}%`;
     taskTitle.textContent = `${q.id}. ${q.title}`;
     taskBody.innerHTML = q.body;
+
+    // Update Flag button state
+    if (btnFlag) {
+      if (flaggedQuestions.has(index)) {
+        btnFlag.classList.add('flagged');
+        btnFlag.querySelector('.flag-text').textContent = 'Flagged';
+      } else {
+        btnFlag.classList.remove('flagged');
+        btnFlag.querySelector('.flag-text').textContent = 'Flag';
+      }
+    }
 
     // Render interactive Doc Helper Links under Context Box
     renderDocHelpers(q);

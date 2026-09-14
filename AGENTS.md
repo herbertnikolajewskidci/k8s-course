@@ -18,10 +18,16 @@ learning methodology**:
    file under `labs/`, the agent **MUST append the detailed corrections,
    explanations, and exam takeaways directly into that same file** under a
    `## Feedback & Korrekturen` section.
-4. **Documentation & Keyword Strategy**: For every lab task, provide the
-   exact **search keywords** for `kubernetes.io/docs/` and the matching
-   **`kubectl explain`** in-terminal shortcuts, training Herbert to locate
-   valid YAML snippets and syntax in seconds during the exam.
+4. **Documentation & Keyword Strategy (Docs & In-Page Search Standard):**
+   Für jedes Lab und jedes Review **MUSS** eine präzise, live-verifizierte
+   Schritt-für-Schritt-Anleitung zur Doku-Navigation bereitgestellt werden:
+   - **Docs-Suchfeld:** Exakter Suchstring für `kubernetes.io/docs/`.
+   - **Zielseite & Klickpfad:** Konkrete Unterseite/URL im Doku-Baum.
+   - **In-Page Suche (`Strg+F` / `Cmd+F`):** Die exakten 1 bis 2 Schlüsselwörter,
+     die man im Browser tippen muss, um ohne Scrollen direkt an der
+     Definitionszeile oder dem YAML-Snippet zu landen.
+   - **In-Terminal Fastpath (`kubectl explain` / `--help`):** Die minimalen
+     CLI-Befehle, um die Syntax komplett offline und ohne Browser zu ermitteln.
 5. **No Copyright Infringement**: Never commit or extract verbatim copyrighted
    book text or course files into this repository. All materials must be
    original summaries, mental models, YAML manifests, lab steps, and personal
@@ -101,6 +107,113 @@ Labs must test **Kubernetes competencies**, not obscure Linux shell quirks:
 - **Focus on CKA Patterns:** Tasks must be intuitive and testable directly via
   standard `kubectl` and node-level CLI commands without requiring deep-dive
   OS-level debugging (like stream buffering or xxd hex inspection).
+- **Event-Forensik & Fehlermeldungs-Didaktik (Verbindlicher Standard):**
+  Bei allen Aufgaben, in denen Pods/Workloads im Zustand `Pending`, `CrashLoop`
+  oder `Error` sind, gilt oberste Priorität:
+  1. **Kein blindes Raten oder Cluster-Scannen:** Zuerst gezielt die Events
+     des betroffenen Objekts extrahieren (`describe ... | tail -n 15` oder
+     `kubectl get events --field-selector ...`).
+  2. **Wort-für-Wort-Dekodierung:** Fehlermeldungen nicht als „Wall of Text“
+     übergehen, sondern das Subjekt und die Schlüsselwörter (z. B. `Pod's`
+     vs. `PersistentVolume's`, `free ports`, `unschedulable`) gemeinsam
+     zeilenweise analysieren und die genaue Bedeutung transparent machen,
+     bevor Lösungsschritte ausgeführt werden.
+
+## Daily 2-Hour Exam Simulator Routine (Custom CKA Exam Lab)
+
+Als strategischer Anker für die Retake-Vorbereitung verfügt Herbert über eine
+eigene, integrierte CKA-Prüfungssimulation im Repository:
+
+- **Feste Morgen-Routine:** Jeden Morgen startet der Tag idealerweise mit einem
+  fokussierten **2-Stunden-Simulationsblock** unter Realbedingungen (PSI-Taktung,
+  Zeitmanagement, 2-Minuten-Flag-Regel).
+- **Ziel des täglichen Drills:** Prüfungsresistenz, CLI-Fluency und instinktive
+  Nutzung der verifizierten Doku-/Explain-Suchpfade festigen, bis der Ablauf
+  automatisiert sitzt.
+- **Rolle des Agenten:** Bereitstellung, Reset und Auswertung der täglichen
+  Exam-Szenarien ohne Reibungsverluste.
+
+## Exam Simulator Architecture & Rigorous Difficulty Standards (Mandatory)
+
+### 1. Host- & VM-Architektur (Unraid KVM Standard)
+
+- **Keine Bare-Metal-Verschmutzung auf Unraid:** Weder Kubernetes-Nodes noch
+  Prüfungswerkzeuge werden direkt auf dem Unraid-Host-OS installiert.
+- **Dedizierte KVM-VMs auf Unraid:** Die gesamte Prüfungsumgebung
+  (Split-Screen-Portal, Webtop, Kubeadm-Cluster mit Master- und Worker-Nodes)
+  läuft ausschließlich innerhalb dedizierter KVM-Virtual-Machines auf dem
+  Unraid-Server (`192.168.131.223`).
+- **Snapshot & Reset-Garantie:** Der Cluster- und Desktop-Zustand muss vor jedem
+  Exam-Lauf über VM-Snapshots oder Reset-Skripte in einen sauberen Zustand
+  zurücksetzbar sein.
+- **Lokaler Mac/OrbStack-Cluster:** Dient ausschließlich als schneller, lokaler
+  Prototyping- und Syntax-Prüfstand, niemals als Ersatz für die vollwertige
+  x86_64 KVM-Prüfungsumgebung auf Unraid.
+- **Verbindliche SSH-Host-Navigation (Niemals Kubeconfig-Kontext-Wechsel!):**
+  Exakt wie im echten CKA-Examen (PSI) und in Killer.sh gilt:
+  1. Aufgaben starten **NIEMALS** mit `kubectl config use-context ...`. Es gibt
+     keine manuellen Kubeconfig-Kontextwechsel!
+  2. Jede Aufgabe beginnt stattdessen mit einer **expliziten SSH-Anweisung**
+     auf den jeweiligen Ziel-Host/Node (z. B. `ssh cluster1-controlplane`,
+     `ssh cka6016`, `ssh cluster1-node01`).
+  3. Der Prüfling sitzt in der Student/Jump-Host-Umgebung (Webtop) und
+     schaltet sich vor Beginn der Bearbeitung per SSH auf die für die
+     Aufgabe vorgesehene Maschine. Alle weiteren Schritte erfolgen dort.
+- **Topologie der KVM-Exam-Cluster auf Unraid:**
+  Um Kubelet-Troubleshooting (Q6), Static Pods und Worker-Node-Fails
+  isoliert und crash-sicher abzubilden, läuft die Umgebung auf 4 KVM-VMs:
+  1. **`cka-main` (Control-Plane):** Für Core-Workloads, DNS (Q1), Storage (Q10),
+     CRDs/Kustomize (Q17). SSH: `cka6016` / `cka9412`.
+  2. **`cka-sec` (Cluster 2):** Für Static Pods (Q2), etcd Snapshot (Q7),
+     Secrets & SubPath (Q11). SSH: `cka2560` / `cka7968`.
+  3. **`cka-cp3` + `cka-node1` (Cluster 3 Master + Worker Gespann):**
+     Dediziert für echtes Node-Troubleshooting! Auf `cka-node1` crasht Kubelet
+     (`10-kubeadm.conf`), während `cka-cp3` weiterläuft. SSH: `cka5248` (CP)
+     und `cka5248-node1` / `cka1024` (Worker).
+  4. **`cka-apps` (Cluster 4):** Für Cross-Pod ReadinessProbes (Q4) und
+     Multi-Container Pods (Q13). SSH: `cka3200` / `cka2556`.
+
+### 2. Referenz-Basis für das Prüfungsniveau (Der Killer.sh-Benchmark)
+
+Alle neu erstellten Exam-Aufgaben und Szenarien müssen sich am nachweisbaren
+Schwierigkeitsgrad der Killer.sh-Simulationen messen lassen. Die authentischen
+Referenzquellen liegen lokal und ungetrackt unter:
+
+- `docs/exam-references/killer-sh-sim-a/questions-01-17-and-previews.md`
+- `docs/exam-references/killer-sh-sim-b/questions-01-17.md`
+- `docs/exam-references/score-analysis/killer-sh-sim-a-and-b-gap-analysis.md`
+
+### 3. Verbindliche Qualitäts- und Schwierigkeits-Kriterien (Kein Weichspüler)
+
+Jeder Agent in jedem Chat **MUSS** beim Entwurf von Prüfungsfragen und
+Szenarien folgende Prüfkriterien nachweislich erfüllen:
+
+1. **Strikte Multi-Layering-Pflicht (Mindestens 3–4 Teilfallen pro Aufgabe):**
+   Aufgaben dürfen niemals triviale Ein-Schritt-Befehle sein. Sie müssen exakt
+   wie bei Killer.sh mehrere kombinierte Fallstricke enthalten (z. B. nicht nur
+   einen Service erstellen, sondern FQDN-Referenzen über Namespaces hinweg,
+   Stateful Pod-Subdomains, IP-Dash-Formate und nachgelagerte Controller-
+   Restarts mit Verifikation).
+2. **Keine Lösungshinweise im Aufgabentext:**
+   Der Fragentext beschreibt ausschließlich den Geschäftszweck, das gewünschte
+   Soll-Verhalten oder beobachtbare Fehlersymptome. Es werden keine YAML-
+   Snippets, API-Felder oder Teillösungen im Text vorgekaut.
+3. **Reale Node- & Systemd-Ebene:**
+   Troubleshooting- und Architektur-Aufgaben müssen echte Node-Eingriffe testen:
+   Kubelet Drop-In Units (`/etc/systemd/system/kubelet.service.d/`), echte
+   OpenSSL-Dateipfade (`/var/lib/kubelet/pki/`), Static-Pod-Manifeste
+   (`/etc/kubernetes/manifests/`) und Snapshot-Restores mit `etcdutl`.
+4. **Vollständige Parität zu Killer.sh Subtasks:**
+   Für jede Aufgabe muss im Vorfeld dargelegt werden, welchen Teilaspekten
+   aus Simulation A oder B sie strukturell entspricht.
+5. **In-Cluster Validierungspflicht:**
+   Kein Szenario darf als fertig deklariert oder committed werden, bevor der
+   Agent das Setup-Skript im echten Cluster ausgeführt und die Lösung via
+   Test-Skript fehlerfrei verifiziert hat.
+6. **Copyright-Schutz:**
+   Verbindliche Einhaltung eigener Bezeichner, Namespaces, CIDRs und
+   Geschichten. Die strukturelle Denk- und Falltiefe bleibt 1:1 erhalten, der
+   Wortlaut ist ein originäres Werk.
 
 ## Agent Skills
 

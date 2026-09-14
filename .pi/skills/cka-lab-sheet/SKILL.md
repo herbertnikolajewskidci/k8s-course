@@ -10,17 +10,39 @@ Lab-Arbeitsblätter (`labs/XX-*/Aufgabe-Y.md`) in diesem Repository.
 
 ## Pädagogische Prinzipien (Vera F. Birkenbihl & CKA Exam)
 
-1. **Wissensnetz zuerst:** Das mentale Modell aktiviert bestehende Synapsen
-   (Analogien, Paketflüsse, Protokoll-Logik), bevor Befehle getippt werden.
+1. **Wissensnetz zuerst (inkl. live verifizierter Doku-Navigationsanker):**
+   Das mentale Modell aktiviert bestehende Synapsen (Analogien, Paketflüsse,
+   Protokoll-Logik) und verknüpft sie **direkt im Theorieteil** mit den
+   konkreten Fundstellen auf `kubernetes.io/docs/`.
+   - **Verifikations-Pflicht via Firecrawl Scrape:** Der Agent darf
+     Doku-Fundstellen, Pfade, CLI-Befehle und Tabellen **NIEMALS aus dem Kopf
+     oder Trainingsdaten erraten**. Jede empfohlene Seite MUSS im Erstellungs-
+     prozess per `scrape` live von `kubernetes.io` abgerufen und verifiziert
+     werden.
+   - **Präzise Verweise:** Es müssen der exakte Suchbegriff, der Titel der
+     Zielseite, der konkrete Abschnitts-Header (Heading) und das dort wörtlich
+     zu findende Code-Beispiel / die Tabelle dokumentiert sein.
 2. **Keine Lösungs-Spoiler vor der Aufgabe:** Die Aufgabenstellung kommt direkt
-   nach dem Wissensnetz. Vorgefertigte `kubectl`-Einzeiler dürfen niemals vor
-   der Aufgabe stehen, um den Denk- und Lerntransfer nicht zu untergraben.
-3. **Spickzettel & Doku-Hilfen ans Ende:** Keywords für `kubernetes.io` und
-   `kubectl explain`-Pfade stehen als optionale Hilfestellung *unter* den
-   Aufgaben und enthalten keine fertigen Lösungen.
-4. **Ball-im-Tor-Effekt (In-File-Review):** Nach der Bearbeitung durch Herbert
-   wird das Feedback inklusive Fehleranalyse und CKA-Prüfungs-Takeaways direkt
-   in denselben Arbeitsbogen unter `## 5. Feedback & Korrekturen` geschrieben.
+   nach dem Wissensnetz. Vorgefertigte aufgabenspezifische `kubectl`-Lösungen
+   oder Manifest-Lösungen der aktuellen Aufgabe dürfen niemals vor der Aufgabe
+   stehen, um den Denk- und Lerntransfer nicht zu untergraben.
+3. **Spickzettel & Doku-Hilfen ans Ende:** Zusätzliche CLI-Flags, Linux-Tools,
+   Keywords und `kubectl explain`-Pfade stehen als Schnellreferenz *unter* den
+   Aufgaben.
+4. **Ball-im-Tor-Effekt & Doku-First Review:** Nach der Bearbeitung durch
+   Herbert wird das Feedback inklusive Fehleranalyse und CKA-Prüfungs-Takeaways
+   direkt in denselben Arbeitsbogen unter `## 5. Feedback & Korrekturen`
+   geschrieben.
+   - **Keine Auswendiglern-Rezepte:** Das Feedback darf niemals mit
+     "Merke dir Befehl X" argumentieren.
+   - **Such- & Herleitungs-Pfade dokumentieren:** Für JEDEN Schritt muss
+     gezeigt werden, wie man mit Hilfe von `--help`, `man`, `journalctl -h`
+     oder über die Doku-Suchleiste (`kubernetes.io/docs/`) mit konkreten
+     Suchbegriffen und Überschriften in unter 30 Sekunden zum Ziel gelangt.
+   - **Target-Node Verifikation:** Werden Pods zur Verifikation von
+     Node-Reparaturen gestartet, MUSS immer `kubectl get pod -o wide`
+     geprüft werden (oder `--overrides` / `nodeName`), um sicherzustellen,
+     dass der Pod tatsächlich auf dem reparierten Node läuft.
 
 ---
 

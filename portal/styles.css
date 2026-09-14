@@ -252,6 +252,40 @@ body {
   box-sizing: border-box;
 }
 
+/* Flag Button (PSI 2-Minute Rule) */
+.flag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #334155;
+  color: #94a3b8;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.flag-btn:hover {
+  background: #475569;
+  color: #f8fafc;
+}
+
+.flag-btn.flagged {
+  background: #b91c1c;
+  color: #ffffff;
+  border-color: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+}
+
+.flag-btn.flagged .flag-icon {
+  color: #fecaca;
+}
+
 .nav-btn {
   background: #334155;
   color: #f8fafc;
