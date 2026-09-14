@@ -172,11 +172,12 @@ window.QUESTIONS = [
         <code>ssh cka5248</code> (Worker: <code>ssh cka5248-node1</code>)
       </div>
 
-      <p>Security compliance requires auditing active Kubelet certificates on worker node <code>cka5248-node1</code> located under <code>/var/lib/kubelet/pki/</code>.</p>
+      <p>Security compliance requires auditing active Kubelet certificates on worker node <code>cka-worker1</code> (accessible via <code>ssh cka5248-node1</code>) located under <code>/var/lib/kubelet/pki/</code>.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>SSH into the worker node: <code>ssh cka5248-node1</code>.</li>
+        <li>Connect to the control-plane host: <code>ssh cka5248</code>.</li>
+        <li>From the control-plane host, SSH into the worker node: <code>ssh cka5248-node1</code>.</li>
         <li>Inspect the active certificate files in <code>/var/lib/kubelet/pki/</code>.</li>
         <li>Identify:
           <ul>
@@ -185,7 +186,7 @@ window.QUESTIONS = [
           </ul>
         </li>
         <li>Using <code>openssl x509</code>, extract the <strong>Issuer</strong> and <strong>Extended Key Usage</strong> for both certificates.</li>
-        <li>Save the structured findings into <code>/course/5/certificate-info.txt</code> on the control-plane host.</li>
+        <li>Return to the control-plane host (<code>exit</code>) and save the structured findings into <code>/course/5/certificate-info.txt</code>.</li>
       </ul>
 
       <h4>Verification:</h4>
@@ -210,19 +211,19 @@ window.QUESTIONS = [
         <code>ssh cka1024</code>
       </div>
 
-      <p>Worker node <code>cka1024</code> is reporting status <code>NotReady</code> in the cluster because its Kubelet service fails to run.</p>
+      <p>Worker node <code>cka-worker1</code> (accessible via SSH as <code>cka1024</code>) is reporting status <code>NotReady</code> in the cluster because its Kubelet service fails to run.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>SSH into the affected node: <code>ssh cka1024</code>.</li>
+        <li>SSH into the affected worker node: <code>ssh cka1024</code>.</li>
         <li>Investigate why the Kubelet service fails to start.</li>
         <li>Resolve the underlying configuration failure and ensure Kubelet is active and running.</li>
         <li>Ensure system configuration changes persist across service restarts.</li>
-        <li>Exit back to the student environment and verify from the control-plane that node <code>cka1024</code> returns to <code>Ready</code>.</li>
+        <li>Exit back to the student shell (<code>exit</code>) and verify with <code>kubectl get nodes</code> that node <code>cka-worker1</code> returns to <code>Ready</code>.</li>
       </ul>
 
       <h4>Verification:</h4>
-      <pre><code>systemctl is-active kubelet # on node, then exit and run: kubectl get nodes</code></pre>
+      <pre><code>systemctl is-active kubelet # on cka1024, then run exit and: kubectl get nodes</code></pre>
     `
   },
   {
@@ -628,13 +629,19 @@ window.QUESTIONS = [
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>Identify which node is currently hosting Pod <code>tiger-telemetry</code>.</li>
-        <li>SSH into that node (e.g. <code>ssh cka2556-node1</code>).</li>
-        <li>Using the container runtime CLI <code>crictl</code>:
+        <li>SSH into the control-plane host: <code>ssh cka2556</code>.</li>
+        <li>Identify which node is currently hosting Pod <code>tiger-telemetry</code> (e.g. using <code>kubectl get pod -n project-tiger -o wide</code>).</li>
+        <li>SSH into that worker node from the control-plane (e.g. <code>ssh cka2556-node1</code> or <code>ssh cka-worker1</code>).</li>
+        <li>Using the container runtime CLI <code>crictl</code> on the worker node:
           <ul>
             <li>Find the container ID of the application container.</li>
-            <li>Inspect the container and write its <code>runtimeType</code> (from <code>crictl inspect</code>) into <code>/course/17/runtime-type.txt</code> on the control-plane host.</li>
-            <li>Extract the container's logs using <code>crictl logs</code> and save them into <code>/course/17/container.log</code> on the control-plane host.</li>
+            <li>Inspect the container to determine its <code>runtimeType</code> (from <code>crictl inspect</code>).</li>
+          </ul>
+        </li>
+        <li>Return to the control-plane host (<code>exit</code>):
+          <ul>
+            <li>Write the discovered <code>runtimeType</code> into <code>/course/17/runtime-type.txt</code>.</li>
+            <li>Save the application container's logs into <code>/course/17/container.log</code>.</li>
           </ul>
         </li>
       </ul>
