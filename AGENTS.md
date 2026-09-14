@@ -169,19 +169,23 @@ eigene, integrierte CKA-Prüfungssimulation im Repository:
   3. Der Prüfling sitzt in der Student/Jump-Host-Umgebung (Webtop) und
      schaltet sich vor Beginn der Bearbeitung per SSH auf die für die
      Aufgabe vorgesehene Maschine. Alle weiteren Schritte erfolgen dort.
-- **Topologie der KVM-Exam-Cluster auf Unraid:**
-  Um Kubelet-Troubleshooting (Q6), Static Pods und Worker-Node-Fails
-  isoliert und crash-sicher abzubilden, läuft die Umgebung auf 4 KVM-VMs:
-  1. **`cka-main` (Control-Plane):** Für Core-Workloads, DNS (Q1), Storage (Q10),
-     CRDs/Kustomize (Q17). SSH: `cka6016` / `cka9412`.
-  2. **`cka-sec` (Cluster 2):** Für Static Pods (Q2), etcd Snapshot (Q7),
-     Secrets & SubPath (Q11). SSH: `cka2560` / `cka7968`.
-  3. **`cka-cp3` + `cka-node1` (Cluster 3 Master + Worker Gespann):**
-     Dediziert für echtes Node-Troubleshooting! Auf `cka-node1` crasht Kubelet
-     (`10-kubeadm.conf`), während `cka-cp3` weiterläuft. SSH: `cka5248` (CP)
-     und `cka5248-node1` / `cka1024` (Worker).
-  4. **`cka-apps` (Cluster 4):** Für Cross-Pod ReadinessProbes (Q4) und
-     Multi-Container Pods (Q13). SSH: `cka3200` / `cka2556`.
+- **Topology of Authentic Killer.sh Exam Clusters on Unraid (6 Clusters / 7 VMs):**
+  To mirror the authentic Killer.sh multi-cluster isolation with 100% hostname
+  and node parity, the environment runs on 7 dedicated KVM VMs on Unraid
+  (`192.168.131.223`):
+  1. **`cka6016` (Cluster 1):** Single-node CP (`192.168.130.212`) for Q1 (DNS),
+     Q10 (Storage), Q15 (Drain), Q17 (crictl). SSH: `ssh cka6016`.
+  2. **`cka2560` (Cluster 2):** Single-node CP (`192.168.130.213`) for Q2 (Kubeconfig),
+     Q7 (Gateway API), Q11 (PV Recovery). SSH: `ssh cka2560`.
+  3. **`cka5248` + `cka5248-node1` (Cluster 3 Master + Dedicated Worker):**
+     Two-node cluster (`192.168.130.214` & `.215`) for Q3 (Downward API),
+     Q9 (Kustomize), Q12 (Secrets). SSH: `ssh cka5248` & `ssh cka5248-node1`.
+  4. **`cka3200` (Cluster 4):** Single-node CP (`192.168.130.216`) for Q4 (Probes),
+     Q13 (RBAC), Q16 (Pending Pod Forensics). SSH: `ssh cka3200`.
+  5. **`cka8448` (Cluster 5):** Single-node CP (`192.168.130.217`) for Q5 (PKI Certs),
+     Q8 (NetPol), Q14 (etcd). SSH: `ssh cka8448`.
+  6. **`cka1024` (Cluster 6):** Dedicated troubleshooting node (`192.168.130.218`)
+     for Q6 (Kubelet Crashloop in `10-kubeadm.conf`). SSH: `ssh cka1024`.
 
 ### 2. Referenz-Basis für das Prüfungsniveau (Der Killer.sh-Benchmark)
 

@@ -1,6 +1,6 @@
-// CKA Official Simulation Exam - Authentic 17 Question Pool (V2)
-// Full Killer.sh Parity, Zero Spoilers, Real Multi-Layering, and PSI Exam Ergonomics.
-// All tasks use explicit SSH host instructions, Click-to-Copy, and live verified docs.
+// CKA Official Simulation Exam - Authentic 17 Question Pool (V3)
+// 100% Authentic 6-Cluster / Multi-VM Architecture on Unraid.
+// Every SSH host matches the VM hostname and node name 1:1.
 
 window.QUESTIONS = [
   {
@@ -53,7 +53,7 @@ window.QUESTIONS = [
     id: 2,
     weight: 4,
     title: "Kubeconfig Extraction, Contexts & Client Certificates",
-    host: "ssh cka9412",
+    host: "ssh cka2560",
     docs: [
       {
         title: "Organizing Cluster Access Using kubeconfig",
@@ -64,14 +64,14 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka9412</code>
+        <code>ssh cka2560</code>
       </div>
 
       <p>A cluster audit requires extracting specific credentials and cluster definitions from an archived configuration file located at <code>/course/2/kubeconfig</code>.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>SSH into the assigned host: <code>ssh cka9412</code>.</li>
+        <li>SSH into the assigned host: <code>ssh cka2560</code>.</li>
         <li>Extract the names of all contexts defined in <code>/course/2/kubeconfig</code> and save them into <code>/course/2/contexts</code> (one context name per line).</li>
         <li>Extract the name of the current active context into <code>/course/2/current-context</code>.</li>
         <li>Extract the raw client certificate data for user <code>account-0042</code>, decode the base64 content, and write the decoded certificate string into <code>/course/2/cert</code>.</li>
@@ -107,6 +107,7 @@ window.QUESTIONS = [
 
       <h4>Task Requirements:</h4>
       <ul>
+        <li>SSH into the assigned host: <code>ssh cka5248</code>.</li>
         <li>The Pod must contain two containers sharing an <code>emptyDir</code> volume mounted at <code>/var/log/app</code>:
           <ul>
             <li>Container 1: Named <code>producer</code>, using image <code>busybox:latest</code>. It must continuously append the current timestamp and node name into <code>/var/log/app/events.log</code> every 5 seconds.</li>
@@ -143,6 +144,7 @@ window.QUESTIONS = [
 
       <h4>Task Requirements:</h4>
       <ul>
+        <li>SSH into the assigned host: <code>ssh cka3200</code>.</li>
         <li>Create a monitoring Pod named <code>probe-checker</code> in namespace <code>project-alpha</code> using image <code>busybox:latest</code> running an idle process (e.g. <code>sleep 3600</code>).</li>
         <li>Configure an <code>exec</code> based <code>readinessProbe</code> on <code>probe-checker</code> that periodically tests HTTP reachability of <code>backend-service</code> on port 80 using <code>wget</code>.</li>
         <li>Confirm that <code>probe-checker</code> initially stays in status <code>0/1 Ready</code> (Not Ready) because the backend service is not yet answering.</li>
@@ -158,7 +160,7 @@ window.QUESTIONS = [
     id: 5,
     weight: 6,
     title: "Kubelet PKI & OpenSSL Certificate Audit",
-    host: "ssh cka5248",
+    host: "ssh cka8448",
     docs: [
       {
         title: "Certificates and PKI Architecture",
@@ -169,15 +171,14 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka5248</code> (Worker: <code>ssh cka5248-node1</code>)
+        <code>ssh cka8448</code>
       </div>
 
-      <p>Security compliance requires auditing active Kubelet certificates on worker node <code>cka-worker1</code> (accessible via <code>ssh cka5248-node1</code>) located under <code>/var/lib/kubelet/pki/</code>.</p>
+      <p>Security compliance requires auditing active Kubelet certificates on node <code>cka8448</code> located under <code>/var/lib/kubelet/pki/</code>.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>Connect to the control-plane host: <code>ssh cka5248</code>.</li>
-        <li>From the control-plane host, SSH into the worker node: <code>ssh cka5248-node1</code>.</li>
+        <li>SSH into node: <code>ssh cka8448</code>.</li>
         <li>Inspect the active certificate files in <code>/var/lib/kubelet/pki/</code>.</li>
         <li>Identify:
           <ul>
@@ -186,7 +187,7 @@ window.QUESTIONS = [
           </ul>
         </li>
         <li>Using <code>openssl x509</code>, extract the <strong>Issuer</strong> and <strong>Extended Key Usage</strong> for both certificates.</li>
-        <li>Return to the control-plane host (<code>exit</code>) and save the structured findings into <code>/course/5/certificate-info.txt</code>.</li>
+        <li>Save the structured findings into <code>/course/5/certificate-info.txt</code>.</li>
       </ul>
 
       <h4>Verification:</h4>
@@ -211,26 +212,26 @@ window.QUESTIONS = [
         <code>ssh cka1024</code>
       </div>
 
-      <p>Worker node <code>cka-worker1</code> (accessible via SSH as <code>cka1024</code>) is reporting status <code>NotReady</code> in the cluster because its Kubelet service fails to run.</p>
+      <p>Node <code>cka1024</code> is reporting status <code>NotReady</code> in the cluster because its Kubelet service fails to run.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>SSH into the affected worker node: <code>ssh cka1024</code>.</li>
+        <li>SSH into the affected node: <code>ssh cka1024</code>.</li>
         <li>Investigate why the Kubelet service fails to start.</li>
         <li>Resolve the underlying configuration failure and ensure Kubelet is active and running.</li>
         <li>Ensure system configuration changes persist across service restarts.</li>
-        <li>Exit back to the student shell (<code>exit</code>) and verify with <code>kubectl get nodes</code> that node <code>cka-worker1</code> returns to <code>Ready</code>.</li>
+        <li>Verify with <code>kubectl get nodes</code> that node <code>cka1024</code> returns to <code>Ready</code>.</li>
       </ul>
 
       <h4>Verification:</h4>
-      <pre><code>systemctl is-active kubelet # on cka1024, then run exit and: kubectl get nodes</code></pre>
+      <pre><code>systemctl is-active kubelet && kubectl get nodes</code></pre>
     `
   },
   {
     id: 7,
     weight: 7,
     title: "Gateway API & HTTPRoute Host, Path & Header Routing",
-    host: "ssh cka7968",
+    host: "ssh cka2560",
     docs: [
       {
         title: "Gateway API Specification",
@@ -245,13 +246,14 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka7968</code>
+        <code>ssh cka2560</code>
       </div>
 
       <p>In namespace <code>gateway-infra</code>, services <code>web-v1-svc</code> and <code>web-v2-svc</code> are running on port <code>8080</code>. Gateway <code>app-gateway</code> is deployed.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
+        <li>SSH into the assigned host: <code>ssh cka2560</code>.</li>
         <li>Create an <code>HTTPRoute</code> named <code>traffic-splitter</code> in namespace <code>gateway-infra</code>.</li>
         <li>Attach the route to the existing Gateway named <code>app-gateway</code> in namespace <code>gateway-infra</code>.</li>
         <li>Configure host matching for hostname <code>api.example.com</code>:
@@ -273,7 +275,7 @@ window.QUESTIONS = [
     id: 8,
     weight: 7,
     title: "NetworkPolicy Ingress Isolation (Default Deny & Granular Allow)",
-    host: "ssh cka2560",
+    host: "ssh cka8448",
     docs: [
       {
         title: "Network Policies",
@@ -284,13 +286,14 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka2560</code>
+        <code>ssh cka8448</code>
       </div>
 
       <p>Secure the backend workloads in namespace <code>secure-zone</code> using Kubernetes NetworkPolicies.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
+        <li>SSH into the assigned host: <code>ssh cka8448</code>.</li>
         <li>Create a NetworkPolicy named <code>backend-policy</code> in namespace <code>secure-zone</code> protecting pods labeled <code>role=backend</code>:
           <ul>
             <li>Deny all ingress traffic by default.</li>
@@ -314,7 +317,7 @@ window.QUESTIONS = [
     id: 9,
     weight: 7,
     title: "Kustomize Deployment with Overlays & HorizontalPodAutoscaler",
-    host: "ssh cka5774",
+    host: "ssh cka5248",
     docs: [
       {
         title: "Declarative Management with Kustomize",
@@ -329,13 +332,14 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka5774</code>
+        <code>ssh cka5248</code>
       </div>
 
       <p>In directory <code>/course/9/api-service/</code>, an application is managed using Kustomize with <code>base</code>, <code>staging</code>, and <code>prod</code> overlays.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
+        <li>SSH into the assigned host: <code>ssh cka5248</code>.</li>
         <li>In <code>/course/9/api-service/base/</code>, configure a HorizontalPodAutoscaler named <code>api-hpa</code> targeting Deployment <code>api-service</code>:
           <ul>
             <li>Minimum replicas: <code>2</code>, Maximum replicas: <code>4</code>.</li>
@@ -357,7 +361,7 @@ window.QUESTIONS = [
     id: 10,
     weight: 6,
     title: "StorageClass Dynamic Provisioning with WaitForFirstConsumer",
-    host: "ssh cka8448",
+    host: "ssh cka6016",
     docs: [
       {
         title: "Storage Classes",
@@ -368,13 +372,14 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka8448</code>
+        <code>ssh cka6016</code>
       </div>
 
       <p>Configure dynamic volume provisioning for batch jobs in namespace <code>project-bern</code>.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
+        <li>SSH into the assigned host: <code>ssh cka6016</code>.</li>
         <li>Create a StorageClass named <code>delayed-storage</code>:
           <ul>
             <li>Provisioner: <code>rancher.io/local-path</code>.</li>
@@ -396,7 +401,7 @@ window.QUESTIONS = [
     id: 11,
     weight: 6,
     title: "PersistentVolume Recovery & Re-Binding with Retain Policy",
-    host: "ssh cka6016",
+    host: "ssh cka2560",
     docs: [
       {
         title: "Reclaiming Persistent Volumes",
@@ -407,13 +412,14 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka6016</code>
+        <code>ssh cka2560</code>
       </div>
 
       <p>In namespace <code>storage-recovery</code>, a database volume <code>pv-retained-data</code> has its reclaim policy set to <code>Retain</code>. The original PVC was deleted, leaving the PV in <code>Released</code> state with critical data intact.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
+        <li>SSH into the assigned host: <code>ssh cka2560</code>.</li>
         <li>Inspect <code>pv-retained-data</code> and observe its <code>Released</code> status.</li>
         <li>Make the PersistentVolume available again so that a new claim can bind to it.</li>
         <li>Create a new PersistentVolumeClaim named <code>recovered-pvc</code> in namespace <code>storage-recovery</code> requesting <code>500Mi</code> with accessMode <code>ReadWriteOnce</code> and storageClassName <code>manual</code>.</li>
@@ -428,7 +434,7 @@ window.QUESTIONS = [
     id: 12,
     weight: 6,
     title: "Secret Creation, Decryption & Volume SubPath Mounts",
-    host: "ssh cka2560",
+    host: "ssh cka5248",
     docs: [
       {
         title: "Managing Secrets using kubectl",
@@ -443,13 +449,14 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka2560</code>
+        <code>ssh cka5248</code>
       </div>
 
       <p>Provision credentials securely for web workloads in namespace <code>secret-mgmt</code>.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
+        <li>SSH into the assigned host: <code>ssh cka5248</code>.</li>
         <li>Create a generic Secret named <code>db-credentials</code> in namespace <code>secret-mgmt</code> with keys:
           <ul>
             <li><code>DB_USER</code>: <code>app_admin</code></li>
@@ -472,7 +479,7 @@ window.QUESTIONS = [
     id: 13,
     weight: 6,
     title: "RBAC Security: ServiceAccount, Role & RoleBinding Triad",
-    host: "ssh cka7968",
+    host: "ssh cka3200",
     docs: [
       {
         title: "Using RBAC Authorization",
@@ -483,13 +490,14 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka7968</code>
+        <code>ssh cka3200</code>
       </div>
 
       <p>Grant targeted deployment management permissions in namespace <code>dev-rbac</code>.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
+        <li>SSH into the assigned host: <code>ssh cka3200</code>.</li>
         <li>Create a ServiceAccount named <code>deploy-bot</code> in namespace <code>dev-rbac</code>.</li>
         <li>Create a Role named <code>deployment-manager</code> in namespace <code>dev-rbac</code> granting permissions to <code>get</code>, <code>list</code>, <code>create</code>, <code>update</code>, and <code>patch</code> on <code>deployments</code> in API group <code>apps</code>.</li>
         <li>Bind the ServiceAccount <code>deploy-bot</code> to Role <code>deployment-manager</code> using a RoleBinding named <code>deploy-bot-binding</code>.</li>
@@ -509,7 +517,7 @@ window.QUESTIONS = [
     id: 14,
     weight: 8,
     title: "etcd Backup & Snapshot Verification with etcdutl",
-    host: "ssh cka3200",
+    host: "ssh cka8448",
     docs: [
       {
         title: "Operating etcd clusters for Kubernetes",
@@ -520,14 +528,14 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka3200</code>
+        <code>ssh cka8448</code>
       </div>
 
       <p>Create a point-in-time snapshot backup of the cluster's internal etcd datastore.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>SSH into control-plane node: <code>ssh cka3200</code>.</li>
+        <li>SSH into control-plane node: <code>ssh cka8448</code>.</li>
         <li>Inspect <code>/etc/kubernetes/manifests/etcd.yaml</code> to identify TLS client credentials and endpoint configuration.</li>
         <li>Create a snapshot using <code>etcdctl snapshot save</code> to destination <code>/course/14/backup/etcd-snapshot.db</code>.</li>
         <li>Verify the snapshot status and save the formatted status output into <code>/course/14/backup/status.txt</code>.</li>
@@ -542,7 +550,7 @@ window.QUESTIONS = [
     id: 15,
     weight: 6,
     title: "Node Maintenance: Safe Drain, Cordon & Workload Eviction",
-    host: "ssh cka9412",
+    host: "ssh cka6016",
     docs: [
       {
         title: "Safely Drain a Node",
@@ -553,17 +561,18 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka9412</code>
+        <code>ssh cka6016</code>
       </div>
 
-      <p>Prepare worker node <code>cka-worker1</code> for scheduled operating system kernel patching.</p>
+      <p>Prepare node <code>cka6016</code> for scheduled operating system kernel patching.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>Safely drain node <code>cka-worker1</code> so all workloads are evicted onto remaining nodes.</li>
+        <li>SSH into node: <code>ssh cka6016</code>.</li>
+        <li>Safely drain node <code>cka6016</code>.</li>
         <li>Ensure DaemonSet-managed pods do not block the operation and local pod data is handled appropriately.</li>
         <li>Verify that the node status reports <code>SchedulingDisabled</code>.</li>
-        <li>Once maintenance is complete, mark the node schedulable again.</li>
+        <li>Once maintenance is complete, mark the node schedulable again (<code>kubectl uncordon cka6016</code>).</li>
         <li>Confirm the node returns to <code>Ready</code> state without scheduling restrictions.</li>
       </ul>
 
@@ -575,7 +584,7 @@ window.QUESTIONS = [
     id: 16,
     weight: 8,
     title: "Pending Pod Forensics: NodeSelector, Taints & Constraints Analysis",
-    host: "ssh cka5248",
+    host: "ssh cka3200",
     docs: [
       {
         title: "Assigning Pods to Nodes",
@@ -590,17 +599,18 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka5248</code>
+        <code>ssh cka3200</code>
       </div>
 
       <p>In namespace <code>wp-forensics</code>, deployment <code>analytics-pipeline</code> has replicas stuck in <code>Pending</code> state.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
+        <li>SSH into the environment: <code>ssh cka3200</code>.</li>
         <li>Investigate the scheduling constraints and event conditions of the pending Pods.</li>
         <li>Do <strong>NOT</strong> modify resource requests or container limits in the deployment manifest!</li>
         <li>Determine whether the scheduling failure is caused by node selectors, taints, or volume node affinities.</li>
-        <li>Resolve the root cause at the cluster node level so that all replicas start and transition to <code>Running</code>.</li>
+        <li>Resolve the root cause at the cluster node level (node <code>cka3200</code>) so that all replicas start and transition to <code>Running</code>.</li>
       </ul>
 
       <h4>Verification:</h4>
@@ -611,7 +621,7 @@ window.QUESTIONS = [
     id: 17,
     weight: 7,
     title: "Low-Level Container Forensics & Runtime Inspection with crictl",
-    host: "ssh cka2556",
+    host: "ssh cka6016",
     docs: [
       {
         title: "Debugging Kubernetes nodes with crictl",
@@ -622,24 +632,18 @@ window.QUESTIONS = [
       <p>Connect to the designated environment before starting the task:</p>
       <div class="context-box">
         <span class="context-label">Host:</span>
-        <code>ssh cka2556</code> (Worker: <code>ssh cka2556-node1</code>)
+        <code>ssh cka6016</code>
       </div>
 
-      <p>In namespace <code>project-tiger</code>, Pod <code>tiger-telemetry</code> is running on a cluster node.</p>
+      <p>In namespace <code>project-tiger</code>, Pod <code>tiger-telemetry</code> is running on the cluster.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
-        <li>SSH into the control-plane host: <code>ssh cka2556</code>.</li>
-        <li>Identify which node is currently hosting Pod <code>tiger-telemetry</code> (e.g. using <code>kubectl get pod -n project-tiger -o wide</code>).</li>
-        <li>SSH into that worker node from the control-plane (e.g. <code>ssh cka2556-node1</code> or <code>ssh cka-worker1</code>).</li>
-        <li>Using the container runtime CLI <code>crictl</code> on the worker node:
+        <li>SSH into host: <code>ssh cka6016</code>.</li>
+        <li>Using the container runtime CLI <code>crictl</code>:
           <ul>
             <li>Find the container ID of the application container.</li>
             <li>Inspect the container to determine its <code>runtimeType</code> (from <code>crictl inspect</code>).</li>
-          </ul>
-        </li>
-        <li>Return to the control-plane host (<code>exit</code>):
-          <ul>
             <li>Write the discovered <code>runtimeType</code> into <code>/course/17/runtime-type.txt</code>.</li>
             <li>Save the application container's logs into <code>/course/17/container.log</code>.</li>
           </ul>
