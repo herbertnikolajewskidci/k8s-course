@@ -109,7 +109,36 @@ body {
   font-weight: 700;
   color: #4ade80; /* green */
   letter-spacing: 0.03em;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, background 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.timer-digits:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #475569;
+}
+
+.timer-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #38bdf8;
+  background: #0f172a;
+  border: 1px solid #38bdf8;
+  border-radius: 4px;
+  padding: 2px 6px;
+  width: 88px;
+  text-align: center;
+  outline: none;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.35);
+}
+
+.timer-container.timer-editing {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25);
 }
 
 .timer-digits.warning {
@@ -185,6 +214,30 @@ body {
 
 .timer-btn:active {
   transform: translateY(1px);
+}
+
+.timer-btn-save {
+  background: #059669;
+  border-color: #10b981;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.timer-btn-save:hover {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #34d399;
+}
+
+.timer-btn-cancel {
+  background: #334155;
+  border-color: #64748b;
+  color: #94a3b8;
+}
+
+.timer-btn-cancel:hover {
+  background: #475569;
+  color: #f8fafc;
 }
 
 .timer-container.timer-paused #btnTimerToggle {

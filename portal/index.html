@@ -23,10 +23,14 @@
       <select id="streamSelect" class="stream-select" title="Switch Desktop Stream Source"></select>
       <div class="timer-container" id="timerContainer">
         <span class="timer-label">Time Remaining:</span>
-        <span id="timerDisplay" class="timer-digits">02:00:00</span>
+        <span id="timerDisplay" class="timer-digits" title="Klicken zum manuellen Einstellen der Zeit">02:00:00</span>
+        <input id="timerInput" class="timer-input" type="text" maxlength="8" placeholder="HH:MM:SS" style="display: none;" aria-label="Zeit manuell einstellen">
         <span id="timerPausedBadge" class="timer-paused-badge" aria-hidden="true">(Paused)</span>
         <button id="btnTimerToggle" class="timer-btn" title="Pause / Resume Timer">⏸ Pause</button>
+        <button id="btnTimerEdit" class="timer-btn" title="Zeit manuell einstellen (z. B. für gezielte Teilaufgaben)">✎ Edit</button>
         <button id="btnTimerReset" class="timer-btn" title="Reset to 120 minutes">↺ Reset</button>
+        <button id="btnTimerSave" class="timer-btn timer-btn-save" style="display: none;" title="Neue Zeit bestätigen">✓ Set</button>
+        <button id="btnTimerCancel" class="timer-btn timer-btn-cancel" style="display: none;" title="Abbrechen">✕</button>
       </div>
     </div>
   </header>

@@ -453,16 +453,22 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Copied to clipboard: ${snippet}`, '✓');
   }
 
-  // 5. 120-Minute Exam Countdown Timer with Controls (Pause / Resume / Reset)
+  // 5. 120-Minute Exam Countdown Timer with Controls (Pause / Resume / Reset / Edit)
   function initTimer() {
     const DEFAULT_SECONDS = 120 * 60; // 7200s (2 hours)
     let timerSecondsRemaining = DEFAULT_SECONDS;
     let isTimerRunning = true;
     let timerInterval = null;
+    let isEditingTimer = false;
 
     const timerContainer = document.getElementById('timerContainer') || document.querySelector('.timer-container');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const timerInput = document.getElementById('timerInput');
     const btnTimerToggle = document.getElementById('btnTimerToggle');
+    const btnTimerEdit = document.getElementById('btnTimerEdit');
     const btnTimerReset = document.getElementById('btnTimerReset');
+    const btnTimerSave = document.getElementById('btnTimerSave');
+    const btnTimerCancel = document.getElementById('btnTimerCancel');
 
     function formatTime(totalSeconds) {
       const hours = Math.floor(totalSeconds / 3600);
@@ -472,6 +478,79 @@ document.addEventListener('DOMContentLoaded', () => {
       const mStr = String(minutes).padStart(2, '0');
       const sStr = String(seconds).padStart(2, '0');
       return `${hStr}:${mStr}:${sStr}`;
+    }
+
+    function parseTimeInput(inputStr) {
+      if (!inputStr) return null;
+      const str = inputStr.trim().toLowerCase();
+
+      // Format: XhYm (e.g. 1h30m or 1h)
+      const hmMatch = str.match(/^(\d+)h\s*(\d+)?m?$/);
+      if (hmMatch) {
+        const hours = parseInt(hmMatch[1], 10);
+        const mins = hmMatch[2] ? parseInt(hmMatch[2], 10) : 0;
+        return (hours * 3600) + (mins * 60);
+      }
+
+      // Format: Xm (e.g. 15m, 45m)
+      const mMatch = str.match(/^(\d+)m$/);
+      if (mMatch) {
+        return parseInt(mMatch[1], 10) * 60;
+      }
+
+      // Format: plain number (e.g. 15 -> 15 min)
+      if (/^\d+$/.test(str)) {
+        const val = parseInt(str, 10);
+        if (val <= 600) {
+          return val * 60;
+        }
+      }
+
+      // Format: HH:MM:SS or MM:SS
+      const parts = str.split(':').map(p => p.trim());
+      if (parts.length === 3) {
+        const [h, m, s] = parts.map(Number);
+        if (!isNaN(h) && !isNaN(m) && !isNaN(s) && m >= 0 && m < 60 && s >= 0 && s < 60) {
+          return (h * 3600) + (m * 60) + s;
+        }
+      } else if (parts.length === 2) {
+        const [m, s] = parts.map(Number);
+        if (!isNaN(m) && !isNaN(s) && s >= 0 && s < 60) {
+          return (m * 60) + s;
+        }
+      }
+
+      return null;
+    }
+
+    function saveTimerState() {
+      try {
+        const state = {
+          secondsRemaining: timerSecondsRemaining,
+          isTimerRunning: isTimerRunning,
+          savedAt: Date.now()
+        };
+        localStorage.setItem('cka_exam_timer_state', JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function loadTimerState() {
+      try {
+        const raw = localStorage.getItem('cka_exam_timer_state');
+        if (!raw) return false;
+        const state = JSON.parse(raw);
+        if (typeof state.secondsRemaining === 'number' && state.secondsRemaining >= 0) {
+          if (state.isTimerRunning && state.savedAt) {
+            const elapsed = Math.floor((Date.now() - state.savedAt) / 1000);
+            timerSecondsRemaining = Math.max(0, state.secondsRemaining - elapsed);
+          } else {
+            timerSecondsRemaining = state.secondsRemaining;
+          }
+          isTimerRunning = !!state.isTimerRunning;
+          return true;
+        }
+      } catch (e) {}
+      return false;
     }
 
     function renderDisplay() {
@@ -491,10 +570,14 @@ document.addEventListener('DOMContentLoaded', () => {
         timerSecondsRemaining = 0;
         renderDisplay();
         pauseTimer();
+        saveTimerState();
         return;
       }
       timerSecondsRemaining--;
       renderDisplay();
+      if (timerSecondsRemaining % 5 === 0) {
+        saveTimerState();
+      }
     }
 
     function startTimer() {
@@ -509,6 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnTimerToggle.textContent = '⏸ Pause';
         btnTimerToggle.setAttribute('title', 'Pause Timer');
       }
+      saveTimerState();
       timerInterval = setInterval(tick, 1000);
     }
 
@@ -525,9 +609,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btnTimerToggle.textContent = '▶ Resume';
         btnTimerToggle.setAttribute('title', 'Resume Timer');
       }
+      saveTimerState();
     }
 
     function toggleTimer() {
+      if (isEditingTimer) return;
       if (isTimerRunning) {
         pauseTimer();
         showToast('Timer paused', '⏸');
@@ -541,8 +627,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetTimer() {
+      if (isEditingTimer) exitTimerEditMode();
       timerSecondsRemaining = DEFAULT_SECONDS;
       renderDisplay();
+      saveTimerState();
 
       if (isTimerRunning) {
         startTimer();
@@ -554,16 +642,86 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Timer reset to 02:00:00', '↺');
     }
 
-    if (btnTimerToggle) {
-      btnTimerToggle.addEventListener('click', toggleTimer);
-    }
-    if (btnTimerReset) {
-      btnTimerReset.addEventListener('click', resetTimer);
+    function enterTimerEditMode() {
+      pauseTimer();
+      isEditingTimer = true;
+      if (timerContainer) timerContainer.classList.add('timer-editing');
+      if (timerDisplay) timerDisplay.style.display = 'none';
+      if (timerInput) {
+        timerInput.style.display = 'inline-block';
+        timerInput.value = formatTime(timerSecondsRemaining);
+        setTimeout(() => {
+          timerInput.focus();
+          timerInput.select();
+        }, 50);
+      }
+      if (btnTimerToggle) btnTimerToggle.style.display = 'none';
+      if (btnTimerEdit) btnTimerEdit.style.display = 'none';
+      if (btnTimerReset) btnTimerReset.style.display = 'none';
+      if (btnTimerSave) btnTimerSave.style.display = 'inline-flex';
+      if (btnTimerCancel) btnTimerCancel.style.display = 'inline-flex';
     }
 
-    // Set initial display and start countdown
+    function exitTimerEditMode() {
+      isEditingTimer = false;
+      if (timerContainer) timerContainer.classList.remove('timer-editing');
+      if (timerInput) timerInput.style.display = 'none';
+      if (timerDisplay) timerDisplay.style.display = 'inline-block';
+      if (btnTimerToggle) btnTimerToggle.style.display = 'inline-flex';
+      if (btnTimerEdit) btnTimerEdit.style.display = 'inline-flex';
+      if (btnTimerReset) btnTimerReset.style.display = 'inline-flex';
+      if (btnTimerSave) btnTimerSave.style.display = 'none';
+      if (btnTimerCancel) btnTimerCancel.style.display = 'none';
+    }
+
+    function saveTimerEdit() {
+      if (!timerInput) return;
+      const parsed = parseTimeInput(timerInput.value);
+      if (parsed === null || parsed <= 0) {
+        showToast('Format ungültig (z. B. 00:15:00, 15m oder 45)', '⚠️');
+        timerInput.focus();
+        return;
+      }
+      timerSecondsRemaining = Math.min(parsed, 36000); // max 10h
+      exitTimerEditMode();
+      renderDisplay();
+      saveTimerState();
+      showToast(`Timer manuell auf ${formatTime(timerSecondsRemaining)} gesetzt ⏱️`, '⏱️');
+    }
+
+    function cancelTimerEdit() {
+      exitTimerEditMode();
+      showToast('Timer-Bearbeitung abgebrochen', 'ℹ️');
+    }
+
+    if (btnTimerToggle) btnTimerToggle.addEventListener('click', toggleTimer);
+    if (btnTimerReset) btnTimerReset.addEventListener('click', resetTimer);
+    if (btnTimerEdit) btnTimerEdit.addEventListener('click', enterTimerEditMode);
+    if (timerDisplay) timerDisplay.addEventListener('click', enterTimerEditMode);
+    if (btnTimerSave) btnTimerSave.addEventListener('click', saveTimerEdit);
+    if (btnTimerCancel) btnTimerCancel.addEventListener('click', cancelTimerEdit);
+
+    if (timerInput) {
+      timerInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveTimerEdit();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          cancelTimerEdit();
+        }
+      });
+    }
+
+    // Restore state from localStorage or start fresh
+    const hasRestoredState = loadTimerState();
     renderDisplay();
-    startTimer();
+
+    if (hasRestoredState && !isTimerRunning) {
+      pauseTimer();
+    } else {
+      startTimer();
+    }
   }
 
   // 6. Keyboard Navigation (ArrowLeft / ArrowRight)

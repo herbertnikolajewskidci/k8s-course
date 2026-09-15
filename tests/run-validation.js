@@ -104,6 +104,43 @@ async function run() {
 
     console.log('✅ Ticket 6 / Issue #19: Timer Pause, Resume, and Reset controls verified successfully.');
 
+    // 2d. Manual Timer Edit Validation
+    console.log('Testing Manual Timer Manipulation / Edit Feature...');
+    const btnTimerEdit = page.locator('#btnTimerEdit');
+    const timerInput = page.locator('#timerInput');
+    const btnTimerSave = page.locator('#btnTimerSave');
+    const btnTimerCancel = page.locator('#btnTimerCancel');
+
+    await btnTimerEdit.waitFor({ state: 'visible' });
+    await btnTimerEdit.click();
+
+    // Verify edit mode entered
+    assert.strictEqual(await timerInput.isVisible(), true, 'Timer input must be visible in edit mode');
+    assert.strictEqual(await timer.isVisible(), false, 'Timer display must be hidden in edit mode');
+    assert.strictEqual(await btnTimerSave.isVisible(), true, 'Save button must be visible in edit mode');
+    assert.strictEqual(await btnTimerCancel.isVisible(), true, 'Cancel button must be visible in edit mode');
+
+    // Fill new time e.g. 15 minutes (00:15:00)
+    await timerInput.fill('00:15:00');
+    await btnTimerSave.click();
+
+    // Verify edit mode exited and time set
+    assert.strictEqual(await timerInput.isVisible(), false, 'Timer input hidden after save');
+    assert.strictEqual(await timer.isVisible(), true, 'Timer display visible after save');
+    assert.strictEqual(await timer.textContent(), '00:15:00', 'Timer display updated to 00:15:00');
+
+    // Verify click on timer display directly triggers edit mode
+    await timer.click();
+    assert.strictEqual(await timerInput.isVisible(), true, 'Clicking display opens edit mode');
+    await btnTimerCancel.click();
+    assert.strictEqual(await timerInput.isVisible(), false, 'Cancel exits edit mode');
+    assert.strictEqual(await timer.textContent(), '00:15:00', 'Timer value retained after cancel');
+
+    // Reset back to 02:00:00 for subsequent tests
+    await btnTimerReset.click();
+    assert.strictEqual(await timer.textContent(), '02:00:00', 'Timer reset to 02:00:00');
+    console.log('✅ Manual Timer Edit: Direct click, input field, format parsing, and buttons verified.');
+
     // 2b. Header & Task Nav Bar Placement Validation (Ticket 4 / Issue #17)
     console.log('Testing Ticket 4: Navigation controls inside left task pane and header cleanliness...');
     const headerNav = page.locator('.exam-header .header-nav');
