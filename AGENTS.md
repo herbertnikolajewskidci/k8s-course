@@ -264,3 +264,10 @@ See `docs/agents/triage-labels.md`.
 
 Single-context Kubernetes Wissensnetz glossary and architectural decisions.
 See `docs/agents/domain.md`.
+
+### CKA Exam Review (`/cka-exam-review`)
+
+Automated evaluation of the 17-question morning routine across all 6 KVM
+clusters, drill-flag inspection, and zero-prompting Birkenbihl repetition lab
+sheet generator.
+See `.pi/skills/cka-exam-review/SKILL.md`.
