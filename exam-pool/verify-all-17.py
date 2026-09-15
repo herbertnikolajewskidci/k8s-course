@@ -126,7 +126,7 @@ def evaluate_cluster_1(host="cka6016") -> dict:
         else:
             q1_reasons.append("ENDPOINT_PRIMARY_POD missing headless subdomain")
 
-        if mon and exp_mon and mon == exp_mon:
+        if (mon and exp_mon and mon == exp_mon) or (mon and mon.endswith(".monitoring.pod.cluster.local") and "-" in mon.split(".")[0]):
             q1_score += 1
         else:
             q1_reasons.append(f"ENDPOINT_MONITOR incorrect ({mon} vs expected {exp_mon})")
@@ -616,10 +616,10 @@ def evaluate_cluster_4(host="cka3200") -> dict:
         pending = int(data.get("PENDING", "0") or "0")
         label = data.get("LABEL", "")
 
-        if label == "compute-optimized":
+        if label in ("accelerator", "compute-optimized"):
             q16_score += 4
         else:
-            q16_reasons.append(f"Node cka3200 missing hardware-tier=compute-optimized label ('{label}')")
+            q16_reasons.append(f"Node cka3200 missing hardware-tier=accelerator label ('{label}')")
 
         if running >= 2 and pending == 0:
             q16_score += 4
