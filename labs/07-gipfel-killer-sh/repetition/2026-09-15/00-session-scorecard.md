@@ -3,7 +3,7 @@
 - **Datum:** 2026-09-15
 - **Branch:** `gipfel-killer-sh-drills`
 - **Infrastruktur:** 6 KVM-Cluster / 7 VMs auf Unraid (`192.168.131.223`)
-- **Gesamtergebnis:** **53.5 / 109 Punkte (49.1 %)** — *Nicht bestanden*
+- **Gesamtergebnis:** **55.5 / 109 Punkte (50.9 %)** — *Nicht bestanden*
   (Bestehensgrenze: >= 66.0 %)
 - **Aktive Drill-Flags (🎯):** Q3, Q12, Q15
 
@@ -14,7 +14,7 @@
 <!-- markdownlint-disable MD013 -->
 | ID | Thema / Aufgabenfeld | Cluster | Max | Score | Status | 🎯 Drill? | Notizen & Befund |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| **Q1** | CoreDNS & FQDN Resolution | `cka6016` | 5 | 3 | ⚠️ PARTIAL | – | `ENDPOINT_MONITOR` via IP-Dash korrekt; `.svc` in `ENDPOINT_CORE` fehlte |
+| **Q1** | CoreDNS & FQDN Resolution | `cka6016` | 5 | **5** | ✅ PASS | – | Alle 4 FQDNs inklusive `.svc` und IP-Dash-Format fehlerfrei aufgelöst |
 | **Q2** | Kubeconfig Contexts & Certs | `cka2560` | 4 | **4** | ✅ PASS | – | Kubeconfig-Kontexte, Current-Context & Client-Zertifikat vollständig |
 | **Q3** | Multi-Container & Downward API | `cka5248` | 6 | 0 | ❌ FAIL | 🎯 **JA** | Downward API (`spec.nodeName`) und Shared-Volume nicht angelegt |
 | **Q4** | ReadinessProbe & Endpoints | `cka3200` | 7 | 0 | ❌ FAIL | – | Label-Mismatch Backend/Service; Probe mit `wget` nicht konfiguriert |
@@ -37,13 +37,13 @@
 
 ## 2. Zusammenfassende Leistungs-Statistik
 
-- **Vollständig bestanden (PASS):** 7 von 17 Aufgaben (Q2, Q5, Q6, Q12, Q13,
-  Q16, Q17) → **44 Punkte**
-- **Teilweise gelöst (PARTIAL):** 3 von 17 Aufgaben (Q1, Q8, Q15)
-  → **9.5 Punkte**
+- **Vollständig bestanden (PASS):** 8 von 17 Aufgaben (Q1, Q2, Q5, Q6, Q12, Q13,
+  Q16, Q17) → **49 Punkte**
+- **Teilweise gelöst (PARTIAL):** 2 von 17 Aufgaben (Q8, Q15)
+  → **6.5 Punkte**
 - **Nicht bearbeitet / fehlgeschlagen (FAIL):** 7 von 17 Aufgaben (Q3, Q4, Q7,
   Q9, Q10, Q11, Q14) → **0 Punkte**
-- **Erreichte Gesamtpunktzahl:** **53.5 / 109 Punkte (49.1 %)**
+- **Erreichte Gesamtpunktzahl:** **55.5 / 109 Punkte (50.9 %)**
 
 ---
 

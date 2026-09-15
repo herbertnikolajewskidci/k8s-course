@@ -77,5 +77,35 @@ Passe die ConfigMap `router-endpoints` in Namespace `core-routing` an:
 
 ## 4. Feedback & Korrekturen
 
-Noch keine Einreichung vorhanden.
-Nach deiner Bearbeitung folgt hier das direkte Review.
+### Status: 5 / 5 Punkte (100 % PASS) — Ball-im-Tor bestätigt
+
+- **Erfolgreiche Korrektur:** Du hast die ConfigMap `router-endpoints` im
+  Namespace `core-routing` auf `ENDPOINT_CORE: kubernetes.default.svc.cluster.local`
+  korrigiert, angewendet und den Rollout des Deployments `service-router`
+  neu gestartet.
+- **Cluster-Verifikation:**
+  - `ENDPOINT_CORE`: `kubernetes.default.svc.cluster.local` (OK)
+  - `ENDPOINT_STORAGE`: `storage-vault.storage-tier.svc.cluster.local` (OK)
+  - `ENDPOINT_PRIMARY_POD`:
+    `vault-0.storage-vault.storage-tier.svc.cluster.local` (OK)
+  - `ENDPOINT_MONITOR`: `10-244-0-5.monitoring.pod.cluster.local` (OK)
+  - Router-Logs: `0 FAIL`-Einträge, alle 4 Endpunkte lösen fehlerfrei auf.
+
+### CKA-Prüfungs-Takeaways
+
+1. **Service vs. Pod DNS-Hierarchie:**
+   CoreDNS unterscheidet strikt zwischen der Subdomain `.svc.` für Services
+   und `.pod.` für Pod-IPs. Ein Service-FQDN ohne `.svc.` wird von CoreDNS
+   niemals aufgelöst.
+2. **Schnellcheck im Terminal:**
+   Prüfe die offizielle Service-Bezeichnung immer mit `kubectl get svc`:
+   `kubernetes` liegt immer im Namespace `default`, daher lautet der FQDN
+   `kubernetes.default.svc.cluster.local`.
+
+### Verifizierter Dokumentations-Navigationsanker
+
+- **Docs-Suchfeld:** `dns for services and pods`
+- **Zielseite:** `Concepts -> Services, Networking -> DNS for Services and Pods`
+- **In-Page Suche (Strg+F):** `default.svc`
+- **In-Terminal Fastpath:**
+  `kubectl get svc -n default kubernetes`
