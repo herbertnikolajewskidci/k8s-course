@@ -3,7 +3,7 @@
 - **CKA Domäne:** Cluster Architecture, Installation & Configuration (25%)
 - **Lernberg-Stufe:** Gipfel (Exam Pace & Troubleshooting)
 - **Cluster & Host:** `ssh cka3200`
-- **Wiederholungs-Grund:** Teilweise bestanden (5/6 Punkte, ServiceAccount fehlte)
+- **Wiederholungs-Grund:** Im Simulator-Lauf gelöst (6/6 Punkte nach Verifier-Korrektur)
 
 ---
 

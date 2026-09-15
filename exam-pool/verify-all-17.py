@@ -376,8 +376,8 @@ def evaluate_cluster_3(host="cka5248") -> dict:
     HPA_STAGE=$(kubectl get hpa -n staging-zone -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
     HPA_PROD=$(kubectl get hpa -n prod-zone -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
     PROD_MAX=$(kubectl get hpa api-hpa -n prod-zone -o jsonpath='{.spec.maxReplicas}' 2>/dev/null || echo "0")
-    CM_STAGE=$(kubectl get cm legacy-scaling-config -n staging-zone 2>/dev/null && echo "EXISTS" || echo "DELETED")
-    CM_PROD=$(kubectl get cm legacy-scaling-config -n prod-zone 2>/dev/null && echo "EXISTS" || echo "DELETED")
+    CM_STAGE=$(kubectl get cm legacy-scaling-config -n staging-zone >/dev/null 2>&1 && echo "EXISTS" || echo "DELETED")
+    CM_PROD=$(kubectl get cm legacy-scaling-config -n prod-zone >/dev/null 2>&1 && echo "EXISTS" || echo "DELETED")
     echo "---Q9---"
     echo "STAGE:$HPA_STAGE|PROD:$HPA_PROD|MAX:$PROD_MAX|CM_S:$CM_STAGE|CM_P:$CM_PROD"
 
@@ -513,7 +513,7 @@ def evaluate_cluster_4(host="cka3200") -> dict:
     echo "EP:$EP_COUNT|READY:$PROBE_STATUS|EXEC:$PROBE_EXEC|BACKEND:$BACKEND_RUNNING"
 
     # Q13
-    SA_EXISTS=$(kubectl get sa deploy-bot -n dev-rbac 2>/dev/null && echo "YES" || echo "NO")
+    SA_EXISTS=$(kubectl get sa deploy-bot -n dev-rbac >/dev/null 2>&1 && echo "YES" || echo "NO")
     CAN_CREATE=$(kubectl auth can-i create deployments --as=system:serviceaccount:dev-rbac:deploy-bot -n dev-rbac 2>/dev/null || echo "no")
     CAN_DELETE=$(kubectl auth can-i delete deployments --as=system:serviceaccount:dev-rbac:deploy-bot -n dev-rbac 2>/dev/null || echo "no")
     CAN_LIST=$(kubectl auth can-i list deployments --as=system:serviceaccount:dev-rbac:deploy-bot -n dev-rbac 2>/dev/null || echo "no")
@@ -581,7 +581,7 @@ def evaluate_cluster_4(host="cka3200") -> dict:
         can_delete = data.get("DELETE", "")
         can_list = data.get("LIST", "")
 
-        if sa == "YES":
+        if "YES" in sa:
             q13_score += 1
         else:
             q13_reasons.append("ServiceAccount deploy-bot does not exist")
@@ -646,8 +646,8 @@ def evaluate_cluster_5(host="cka8448") -> dict:
 
     # Q8
     NETPOL_EXISTS=$(kubectl get netpol backend-policy -n secure-zone -o jsonpath='{.metadata.name}' 2>/dev/null || echo "")
-    ALLOW_CHECK=$(kubectl exec -n secure-zone allowed-client -- curl -s -m 2 http://secure-backend:80 2>/dev/null && echo "OK" || echo "FAIL")
-    BLOCK_CHECK=$(kubectl exec -n external-zone blocked-client -- curl -s -m 2 http://secure-backend.secure-zone:80 2>/dev/null && echo "LEAK" || echo "BLOCKED")
+    ALLOW_CHECK=$(kubectl exec -n secure-zone allowed-client -- curl -s -m 2 http://secure-backend:80 >/dev/null 2>&1 && echo "OK" || echo "FAIL")
+    BLOCK_CHECK=$(kubectl exec -n external-zone blocked-client -- curl -s -m 2 http://secure-backend.secure-zone:80 >/dev/null 2>&1 && echo "LEAK" || echo "BLOCKED")
     echo "---Q8---"
     echo "NETPOL:$NETPOL_EXISTS|ALLOW:$ALLOW_CHECK|BLOCK:$BLOCK_CHECK"
 
