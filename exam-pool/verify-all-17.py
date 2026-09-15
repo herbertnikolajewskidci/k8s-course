@@ -807,15 +807,19 @@ def evaluate_cluster_6(host="cka1024") -> dict:
 # -------------------------------------------------------------
 
 def fetch_drill_flags() -> list[int]:
-    """Retrieve Herbert's drill flags from Portal API or fallback to local files."""
+    """Retrieve Herbert's drill flags from Portal API (HTTPS 8091 primary) or fallback."""
+    import ssl
+    ctx = ssl._create_unverified_context()
+
     urls = [
+        "https://192.168.131.223:8091/api/drill-flags",
         "http://192.168.131.223:8090/api/drill-flags",
         "http://127.0.0.1:8092/api/drill-flags"
     ]
     for url in urls:
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "CKA-Evaluator"})
-            with urllib.request.urlopen(req, timeout=3) as resp:
+            with urllib.request.urlopen(req, context=ctx, timeout=3) as resp:
                 if resp.status == 200:
                     data = json.loads(resp.read().decode("utf-8"))
                     flags = data.get("drillFlags", [])

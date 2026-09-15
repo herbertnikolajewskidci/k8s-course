@@ -8,7 +8,8 @@ echo "================================================================="
 echo "=== [CKA Exam Reset V3] Restoring 6 Clusters to Starting State =="
 echo "================================================================="
 
-echo "--> Resetting Portal Drill Flags..."
+echo "--> Resetting Portal Drill Flags (HTTPS :8091)..."
+curl -k -s -X POST https://192.168.131.223:8091/api/drill-flags/reset >/dev/null 2>&1 || \
 curl -s -X POST http://192.168.131.223:8090/api/drill-flags/reset >/dev/null 2>&1 || true
 
 echo "--> Resetting Cluster 1 (cka6016: Q1, Q10, Q15, Q17)..."

@@ -34,7 +34,7 @@ repository root:
 
 This concurrently audits all 6 KVM clusters on Unraid in under 5 seconds,
 interrogates the active student drill flags from
-`http://192.168.131.223:8090/api/drill-flags`, and produces the structured
+`https://192.168.131.223:8091/api/drill-flags`, and produces the structured
 result JSON at `/tmp/exam-verification-results.json`.
 
 Read and parse `/tmp/exam-verification-results.json` using the `read` tool:
