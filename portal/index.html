@@ -43,10 +43,17 @@
           <span class="flag-icon">⚑</span>
           <span class="flag-text">Flag</span>
         </button>
+        <button id="btnDrill" class="drill-btn" title="Frage für gezielte Wiederholung und Übungs-Arbeitsblätter vormerken">
+          <span class="drill-icon">🎯</span>
+          <span class="drill-text">Nochmal üben</span>
+        </button>
       </div>
       <div class="task-meta-bar">
         <span id="taskNumber" class="task-number">Question 1 of 17</span>
-        <span id="taskWeight" class="task-weight-pill">Weight: 4%</span>
+        <div class="task-meta-badges">
+          <span id="drillBadge" class="drill-badge" style="display: none;">🎯 Zum Üben gemerkt</span>
+          <span id="taskWeight" class="task-weight-pill">Weight: 4%</span>
+        </div>
       </div>
       <div class="task-scroll-area" id="taskScrollArea">
         <h2 id="taskTitle" class="task-title">1. Pod Scheduling with NodeAffinity</h2>

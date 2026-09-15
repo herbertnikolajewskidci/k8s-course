@@ -286,6 +286,40 @@ body {
   color: #fecaca;
 }
 
+/* Drill / Repetition Button (Herbert's Practice Routine) */
+.drill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #334155;
+  color: #94a3b8;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.drill-btn:hover {
+  background: #475569;
+  color: #f8fafc;
+}
+
+.drill-btn.drilled {
+  background: #b45309;
+  color: #ffffff;
+  border-color: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+.drill-btn.drilled .drill-icon {
+  filter: drop-shadow(0 0 2px rgba(254, 240, 138, 0.8));
+}
+
 .nav-btn {
   background: #334155;
   color: #f8fafc;
@@ -339,6 +373,32 @@ body {
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
+  gap: 8px;
+}
+
+.task-meta-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drill-badge {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid #fde68a;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  animation: fadeInBadge 0.2s ease;
+}
+
+@keyframes fadeInBadge {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .task-number {

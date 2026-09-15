@@ -69,8 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const flaggedQuestions = new Set();
   const btnFlag = document.getElementById('btnFlag');
 
+  // Set of drill question indices (Herbert's Practice Routine)
+  const drilledQuestions = new Set();
+  const btnDrill = document.getElementById('btnDrill');
+  const drillBadge = document.getElementById('drillBadge');
+
   // 2. Initialize Question Navigation & Dropdown
   function initQuestions() {
+    loadDrillFlagsLocally();
     renderQuestionDropdown();
 
     questionSelect.addEventListener('change', (e) => {
@@ -95,7 +101,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    if (btnDrill) {
+      btnDrill.addEventListener('click', () => {
+        toggleDrillCurrentQuestion();
+      });
+    }
+
     loadQuestion(0);
+    syncDrillFlagsWithBackend();
   }
 
   function renderQuestionDropdown() {
@@ -104,8 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const opt = document.createElement('option');
       opt.value = idx;
       const isFlagged = flaggedQuestions.has(idx);
+      const isDrilled = drilledQuestions.has(idx);
       const flagPrefix = isFlagged ? '⚑ ' : '';
-      opt.textContent = `${flagPrefix}Question ${q.id} of ${questions.length}`;
+      const drillPrefix = isDrilled ? '🎯 ' : '';
+      opt.textContent = `${flagPrefix}${drillPrefix}Question ${q.id} of ${questions.length}`;
       questionSelect.appendChild(opt);
     });
     questionSelect.value = currentQuestionIndex;
@@ -124,6 +139,101 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast(`Question ${questions[currentQuestionIndex].id} flagged for review!`);
     }
     renderQuestionDropdown();
+  }
+
+  function saveDrillFlagsLocally() {
+    try {
+      const activeIds = Array.from(drilledQuestions)
+        .map(idx => questions[idx] ? questions[idx].id : idx + 1);
+      localStorage.setItem('cka_drill_flags', JSON.stringify(activeIds));
+    } catch (e) {
+      console.warn('Could not save drill flags to localStorage:', e);
+    }
+  }
+
+  function loadDrillFlagsLocally() {
+    try {
+      const raw = localStorage.getItem('cka_drill_flags');
+      if (raw) {
+        const ids = JSON.parse(raw);
+        if (Array.isArray(ids)) {
+          ids.forEach(id => {
+            const idx = questions.findIndex(q => q.id === id);
+            if (idx !== -1) drilledQuestions.add(idx);
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load drill flags from localStorage:', e);
+    }
+  }
+
+  async function syncDrillFlagsWithBackend() {
+    try {
+      const res = await fetch('/api/drill-flags');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.drillFlags && Array.isArray(data.drillFlags)) {
+          data.drillFlags.forEach(id => {
+            const idx = questions.findIndex(q => q.id === id);
+            if (idx !== -1) drilledQuestions.add(idx);
+          });
+          saveDrillFlagsLocally();
+          updateDrillUI();
+          renderQuestionDropdown();
+        }
+      }
+    } catch (err) {
+      console.warn('Could not sync drill flags with backend:', err);
+    }
+  }
+
+  async function toggleDrillCurrentQuestion() {
+    const q = questions[currentQuestionIndex];
+    const qId = q ? q.id : (currentQuestionIndex + 1);
+
+    if (drilledQuestions.has(currentQuestionIndex)) {
+      drilledQuestions.delete(currentQuestionIndex);
+      showToast(`Frage ${qId}: Wiederholungs-Markierung entfernt`, 'ℹ️');
+    } else {
+      drilledQuestions.add(currentQuestionIndex);
+      showToast(`Frage ${qId} für gezielte Wiederholung gemerkt! 🎯`, '🎯');
+    }
+
+    saveDrillFlagsLocally();
+    updateDrillUI();
+    renderQuestionDropdown();
+
+    try {
+      const activeIds = Array.from(drilledQuestions)
+        .map(idx => questions[idx] ? questions[idx].id : idx + 1);
+      await fetch('/api/drill-flags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drillFlags: activeIds })
+      });
+    } catch (err) {
+      console.warn('Backend drill flag sync failed:', err);
+    }
+  }
+
+  function updateDrillUI() {
+    const isDrilled = drilledQuestions.has(currentQuestionIndex);
+    if (btnDrill) {
+      const textEl = btnDrill.querySelector('.drill-text');
+      if (isDrilled) {
+        btnDrill.classList.add('drilled');
+        if (textEl) textEl.textContent = 'Gemerkt';
+        btnDrill.setAttribute('title', 'Diese Frage ist für gezieltes Üben gemerkt (Klicken zum Entfernen)');
+      } else {
+        btnDrill.classList.remove('drilled');
+        if (textEl) textEl.textContent = 'Nochmal üben';
+        btnDrill.setAttribute('title', 'Frage für gezielte Wiederholung und Übungs-Arbeitsblätter vormerken');
+      }
+    }
+    if (drillBadge) {
+      drillBadge.style.display = isDrilled ? 'inline-flex' : 'none';
+    }
   }
 
   function loadQuestion(index) {
@@ -146,6 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btnFlag.querySelector('.flag-text').textContent = 'Flag';
       }
     }
+
+    // Update Drill button state & Badge
+    updateDrillUI();
 
     // Render interactive Doc Helper Links under Context Box
     renderDocHelpers(q);

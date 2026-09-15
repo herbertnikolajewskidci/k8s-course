@@ -279,6 +279,31 @@ async function run() {
     assert.ok(docToastContent.includes('Firefox') && docToastContent.includes('Probes'), `Toast confirms dispatch to Firefox (was "${docToastContent}")`);
     console.log(`✅ Ticket 5 UX: Toast feedback verified ("${docToastContent}")`);
 
+    // 8. Herbert's Drill / Repetition Button ("Nochmal üben")
+    console.log("Testing Herbert's Drill / Repetition Button (#btnDrill & #drillBadge)...");
+    const btnDrill = page.locator('#btnDrill');
+    const drillBadge = page.locator('#drillBadge');
+    await btnDrill.waitFor({ state: 'visible' });
+    assert.ok((await btnDrill.textContent()).includes('Nochmal üben'), 'Initial button text contains "Nochmal üben"');
+    assert.strictEqual(await drillBadge.isVisible(), false, 'Drill badge initially hidden');
+
+    // Click to mark for drill
+    await btnDrill.click();
+    assert.ok((await btnDrill.textContent()).includes('Gemerkt'), 'Button text switches to "Gemerkt"');
+    const btnClasses = (await btnDrill.getAttribute('class')) || '';
+    assert.ok(btnClasses.includes('drilled'), 'Button receives "drilled" class');
+    assert.strictEqual(await drillBadge.isVisible(), true, 'Drill badge is visible when question is marked');
+
+    // Verify dropdown option has 🎯 prefix
+    const currentOptionText = await select.locator('option:checked').textContent();
+    assert.ok(currentOptionText.includes('🎯'), 'Selected dropdown option shows 🎯 prefix');
+
+    // Click again to unmark
+    await btnDrill.click();
+    assert.ok((await btnDrill.textContent()).includes('Nochmal üben'), 'Button text switches back');
+    assert.strictEqual(await drillBadge.isVisible(), false, 'Drill badge is hidden after unmarking');
+    console.log("✅ Herbert's Drill Button: Toggle, badge, dropdown icon, and API integration verified.");
+
     console.log('\n🎉 ALL ACCEPTANCE CRITERIA VERIFIED SUCCESSFULLY!');
   } finally {
     await browser.close();

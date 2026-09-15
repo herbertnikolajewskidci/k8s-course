@@ -136,6 +136,25 @@ eigene, integrierte CKA-Prüfungssimulation im Repository:
   automatisiert sitzt.
 - **Rolle des Agenten:** Bereitstellung, Reset und Auswertung der täglichen
   Exam-Szenarien ohne Reibungsverluste.
+- **Student Drill-Flagging ("Nochmal üben" / 🎯):**
+  Herbert kann während der Bearbeitung im Portal Aufgaben mit dem Button
+  `🎯 Nochmal üben` vormerken, die er unabhängig vom Bestehen gezielt
+  vertiefen oder repetieren möchte. Diese Flags werden automatisch im Portal
+  und über die API (`/api/drill-flags`) persistiert.
+- **Automatisierte Lösungsprüfung & Auswertungs-Protokoll (`verify-all-17.sh`):**
+  Wenn Herbert meldet: *„Hey, ich bin jetzt durch, schau dir bitte die Lösungen
+  an von dieser Session“* (oder sinngemäß), führt der Agent SOFORT:
+  1. `./exam-pool/verify-all-17.sh` aus (prüft alle 6 Cluster in unter 5 Sekunden
+     parallel und liest die aktiven Drill-Flags aus `/api/drill-flags`).
+  2. Wertet die Ergebnisse aus `/tmp/exam-verification-results.json` aus
+     (Gesamtscore, Bestanden >= 66%, detaillierte Punktabzüge).
+  3. Führt für alle fehlgeschlagenen / unvollständigen Fragen sowie alle
+     explizit mit `🎯 Nochmal üben` markierten Aufgaben eine strukturierte
+     Event-Forensik & Fehlermeldungs-Didaktik durch.
+  4. Generiert automatisch maßgeschneiderte Birkenbihl-Arbeitsblätter nach
+     dem Skill-Standard `cka-lab-sheet` unter `labs/07-gipfel-killer-sh/repetition/`
+     (Wissensnetz & KaWa -> spoilerfreie Aufgaben -> Spickzettel mit Doku-
+     Navigationsankern -> In-File-Review-Vorbereitung).
 
 ## Exam Simulator Architecture & Rigorous Difficulty Standards (Mandatory)
 
