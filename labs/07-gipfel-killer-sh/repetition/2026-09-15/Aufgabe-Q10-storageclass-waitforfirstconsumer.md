@@ -68,17 +68,7 @@ Erstelle eine StorageClass namens `delayed-storage`:
 
 ---
 
-## 3. Deine Lösung (Befehle / Manifeste / Notizen)
-
-### Lösung 1
-
-```bash
-# Deine Befehle / Notizen
-```
-
----
-
-## 4. Spickzettel & Doku-Hilfen
+## 3. Spickzettel & Doku-Hilfen
 
 - **kubernetes.io Suchbegriff:** `storage classes waitforfirstconsumer`
 - **Zielseite & Klickpfad:** `Concepts -> Storage -> Storage Classes`
@@ -89,7 +79,7 @@ Erstelle eine StorageClass namens `delayed-storage`:
 
 ---
 
-## 5. Feedback & Korrekturen
+## 4. Feedback & Korrekturen
 
 Noch keine Einreichung vorhanden.
 Nach deiner Bearbeitung folgt hier das direkte Review.

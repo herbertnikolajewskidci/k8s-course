@@ -65,17 +65,7 @@ curl -H "Host: api.example.com" -H "x-client-type: mobile" http://<gateway-ip>/
 
 ---
 
-## 3. Deine Lösung (Befehle / Manifeste / Notizen)
-
-### Lösung 1
-
-```bash
-# Deine Befehle / Notizen
-```
-
----
-
-## 4. Spickzettel & Doku-Hilfen
+## 3. Spickzettel & Doku-Hilfen
 
 - **kubernetes.io Suchbegriff:** `gateway api httproute`
 - **Zielseite & Klickpfad:**
@@ -88,7 +78,7 @@ curl -H "Host: api.example.com" -H "x-client-type: mobile" http://<gateway-ip>/
 
 ---
 
-## 5. Feedback & Korrekturen
+## 4. Feedback & Korrekturen
 
 Noch keine Einreichung vorhanden.
 Nach deiner Bearbeitung folgt hier das direkte Review.

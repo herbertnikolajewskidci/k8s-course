@@ -48,7 +48,12 @@ Lab-Arbeitsblätter (`labs/XX-*/Aufgabe-Y.md`) in diesem Repository.
 
 ## Standard-Struktur eines Arbeitsblatts (`Aufgabe-X.md`)
 
-Jede `Aufgabe-X.md` muss exakt folgenden 5 Abschnitten folgen:
+Gemäß der verbindlichen **Separation of Tasks and Solutions** in `AGENTS.md`
+enthält `Aufgabe-X.md` ausschließlich Aufgabenstellung, Wissensnetz, Spickzettel
+und Feedback. Herbert führt seine Befehle, Notizen und Manifeste **ausschließlich
+in der separaten Begleitdatei `Aufgabe-X-solution.md`**.
+
+Jede `Aufgabe-X.md` folgt exakt diesen 4 Abschnitten:
 
 ````markdown
 # Aufgabe X: <Thema>
@@ -68,6 +73,9 @@ Jede `Aufgabe-X.md` muss exakt folgenden 5 Abschnitten folgen:
 
 ## 2. Aufgabenstellung (Block X)
 
+*(Hinweis: Trage deine Lösungen, Befehle und Notizen bitte in die separate Datei
+`Aufgabe-X-solution.md` ein.)*
+
 Namespace für diesen Block: `<ns>`.
 
 ### Aufgabe X.1: <Titel>
@@ -81,23 +89,7 @@ Namespace für diesen Block: `<ns>`.
 
 ---
 
-## 3. Deine Lösung (Befehle / Manifeste / Notizen)
-
-### Lösung X.1
-
-```bash
-# Deine Befehle / Notizen
-```
-
-### Lösung X.2
-
-```bash
-# Deine Befehle / Notizen
-```
-
----
-
-## 4. Spickzettel & Doku-Hilfen (Optional / Bei Bedarf)
+## 3. Spickzettel & Doku-Hilfen (Optional / Bei Bedarf)
 
 Falls du während der Bearbeitung nachschlagen möchtest:
 
@@ -109,7 +101,7 @@ Falls du während der Bearbeitung nachschlagen möchtest:
 
 ---
 
-## 5. Feedback & Korrekturen
+## 4. Feedback & Korrekturen
 
 Noch keine Einreichung vorhanden.
 Nach deiner Bearbeitung folgt hier das direkte Review.

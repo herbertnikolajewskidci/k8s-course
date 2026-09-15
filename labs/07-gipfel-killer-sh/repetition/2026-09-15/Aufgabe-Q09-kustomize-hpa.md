@@ -68,17 +68,7 @@ Im Verzeichnis `/course/9/api-service/` liegt eine Kustomize-Struktur.
 
 ---
 
-## 3. Deine Lösung (Befehle / Manifeste / Notizen)
-
-### Lösung 1
-
-```bash
-# Deine Befehle / Notizen
-```
-
----
-
-## 4. Spickzettel & Doku-Hilfen
+## 3. Spickzettel & Doku-Hilfen
 
 - **kubernetes.io Suchbegriff:** `kustomization horizontal pod autoscale`
 - **Zielseite & Klickpfad:**
@@ -91,7 +81,7 @@ Im Verzeichnis `/course/9/api-service/` liegt eine Kustomize-Struktur.
 
 ---
 
-## 5. Feedback & Korrekturen
+## 4. Feedback & Korrekturen
 
 Noch keine Einreichung vorhanden.
 Nach deiner Bearbeitung folgt hier das direkte Review.

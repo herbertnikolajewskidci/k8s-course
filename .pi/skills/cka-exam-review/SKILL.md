@@ -84,7 +84,8 @@ Where `YYYY-MM-DD` is today's date (e.g. `2026-09-15`).
 
 ### Lab Sheet Structure (`Aufgabe-Q<id>-<slug>.md`)
 
-Every generated file **MUST** contain these exact 5 sections:
+Every generated file **MUST** contain these exact 4 sections (student solutions
+are strictly authored in the companion file `...-solution.md`):
 
 ````markdown
 # Aufgabe Q<id>: <Titel>
@@ -104,6 +105,9 @@ Every generated file **MUST** contain these exact 5 sections:
 
 ## 2. Aufgabenstellung (Repetition Q<id>)
 
+*(Hinweis: Trage deine Lösungen, Befehle und Notizen bitte in die separate Datei
+`Aufgabe-Q<id>-<slug>-solution.md` ein.)*
+
 Host für diese Aufgabe: `ssh <hostname>`.
 
 ### Aufgabe 1: <Konkreter Schritt>
@@ -112,17 +116,7 @@ Host für diese Aufgabe: `ssh <hostname>`.
 
 ---
 
-## 3. Deine Lösung (Befehle / Manifeste / Notizen)
-
-### Lösung 1
-
-```bash
-# Deine Befehle / Notizen
-```
-
----
-
-## 4. Spickzettel & Doku-Hilfen
+## 3. Spickzettel & Doku-Hilfen
 
 - **kubernetes.io Suchbegriff:** `<suchbegriff>`
 - **Zielseite & Klickpfad:** `<url-pfad>`
@@ -133,7 +127,7 @@ Host für diese Aufgabe: `ssh <hostname>`.
 
 ---
 
-## 5. Feedback & Korrekturen
+## 4. Feedback & Korrekturen
 
 Noch keine Einreichung vorhanden.
 Nach deiner Bearbeitung folgt hier das direkte Review.

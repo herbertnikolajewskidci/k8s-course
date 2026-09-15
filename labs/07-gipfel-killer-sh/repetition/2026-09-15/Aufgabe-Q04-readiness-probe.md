@@ -60,17 +60,7 @@ jedoch `Endpoints: <none>`.
 
 ---
 
-## 3. Deine Lösung (Befehle / Manifeste / Notizen)
-
-### Lösung 1
-
-```bash
-# Deine Befehle / Notizen
-```
-
----
-
-## 4. Spickzettel & Doku-Hilfen
+## 3. Spickzettel & Doku-Hilfen
 
 - **kubernetes.io Suchbegriff:** `configure liveness readiness startup probes`
 - **Zielseite & Klickpfad:**
@@ -83,7 +73,7 @@ jedoch `Endpoints: <none>`.
 
 ---
 
-## 5. Feedback & Korrekturen
+## 4. Feedback & Korrekturen
 
 Noch keine Einreichung vorhanden.
 Nach deiner Bearbeitung folgt hier das direkte Review.
