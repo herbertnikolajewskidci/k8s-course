@@ -55,10 +55,13 @@ agent **MUST automatically**:
 3. Read the latest learning record under `learning-records/`.
 4. Greet Herbert by directly stating the active issue, the current learning
    branch, and the immediate next task/lab file without asking for context.
-5. Check exam simulation readiness: Always recognize the centralized exam reset
-   script `exam-pool/reset-exam.sh` (deployed on `cka-runner` at
-   `/tmp/reset-exam.sh`) and be ready to reset the 17-question exam pool
-   without requiring Herbert to explain or re-read previous reset steps.
+5. Check exam simulation readiness: Always recognize the deterministic exam
+   reset script `exam-pool/reset-exam.sh` (deployed inside the Webtop desktop as
+   `/usr/local/bin/reset-exam`). When Herbert requests an exam reset ("setz
+   alles zurück", "reset", "von vorne anfangen"), the agent MUST strictly and
+   exclusively execute `./exam-pool/reset-exam.sh` in a single tool call.
+   Exploratory manual SSH inspections or piecemeal deletions are strictly
+   forbidden.
 
 ## Branching & Tagging Strategy
 
@@ -166,15 +169,14 @@ eigene, integrierte CKA-Prüfungssimulation im Repository:
   (Split-Screen-Portal, Webtop, Kubeadm-Cluster mit Master- und Worker-Nodes)
   läuft ausschließlich innerhalb dedizierter KVM-Virtual-Machines auf dem
   Unraid-Server (`192.168.131.223`).
-- **Snapshot & Automated Reset Guarantee (`exam-pool/reset-exam.sh`):**
-  Cluster state is reset before any exam run via the automated reset script
-  located at `exam-pool/reset-exam.sh` (deployed on `cka-runner` at
-  `/tmp/reset-exam.sh`). Executing `ssh cka-runner '/tmp/reset-exam.sh'` wipes
-  all student solution files in `/course/`, corrupts Kubelet on `cka-worker1`
-  for Q6 (`status=203/EXEC`), resets Q1's ConfigMap and restarts rollout,
-  and restores all 17 scenarios to their pristine unsolved initial state.
-  All agents in new sessions must recognize and offer this reset script
-  without requiring Herbert to remind them.
+- **Deterministic Automated Reset Protocol (`exam-pool/reset-exam.sh`):**
+  Whenever Herbert requests a reset or fresh session start, the agent **MUST
+  execute `./exam-pool/reset-exam.sh` as a single, standalone tool call**.
+  Manual SSH exploratory queries, checking files beforehand, or running
+  piecemeal kubectl commands are **strictly prohibited**.
+  The script runs in ~13 seconds, parallelizes the wipe across all 6 KVM
+  clusters, clears `/course/` on all VMs, resets drill flags on port 8091,
+  corrupts Kubelet on `cka1024`, and performs its own automated self-audit.
 - **Lokaler Mac/OrbStack-Cluster:** Dient ausschließlich als schneller, lokaler
   Prototyping- und Syntax-Prüfstand, niemals als Ersatz für die vollwertige
   x86_64 KVM-Prüfungsumgebung auf Unraid.
@@ -271,3 +273,9 @@ Automated evaluation of the 17-question morning routine across all 6 KVM
 clusters, drill-flag inspection, and zero-prompting Birkenbihl repetition lab
 sheet generator.
 See `.pi/skills/cka-exam-review/SKILL.md`.
+
+### Reset Exam (`/reset-exam`)
+
+One-shot deterministic reset of all 6 KVM clusters, student solution files
+in `/course/`, drill flags on port 8091, and automated self-audit.
+See `.pi/skills/reset-exam/SKILL.md`.
