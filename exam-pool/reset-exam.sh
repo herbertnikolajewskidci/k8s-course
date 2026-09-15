@@ -13,10 +13,12 @@ echo "========================================================================"
 echo "=== [CKA Exam Simulator] Deterministic Reset & Cluster Self-Audit    ==="
 echo "========================================================================"
 
-# 1. Reset Portal Drill Flags
-echo "--> [Portal] Resetting student drill flags via HTTPS :8091..."
+# 1. Reset Portal Drill & Review Flags
+echo "--> [Portal] Resetting student drill & review flags via HTTPS :8091..."
 curl -k -s -X POST https://192.168.131.223:8091/api/drill-flags/reset >/dev/null 2>&1 || \
 curl -s -X POST http://192.168.131.223:8090/api/drill-flags/reset >/dev/null 2>&1 || true
+curl -k -s -X POST https://192.168.131.223:8091/api/review-flags/reset >/dev/null 2>&1 || \
+curl -s -X POST http://192.168.131.223:8090/api/review-flags/reset >/dev/null 2>&1 || true
 
 # 2. Parallel Reset across all 6 Clusters (7 KVM VMs)
 echo "--> [Clusters] Executing parallel cluster & home-dir resets across 7 VMs..."
@@ -71,8 +73,36 @@ INNER_EOF
   # Q15: Node Uncordon
   kubectl uncordon cka6016 >/dev/null 2>&1 || true
 
-  # Q17: Purge runtime inspection logs & outputs
+  # Q17: Purge runtime inspection logs & outputs and ensure telemetry deployment
   rm -f /course/17/*.txt /course/17/*.log /course/17/*.sh 2>/dev/null || true
+  kubectl apply -f - << 'INNER_EOF' >/dev/null 2>&1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tiger-telemetry
+  namespace: project-tiger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tiger-telemetry
+  template:
+    metadata:
+      labels:
+        app: tiger-telemetry
+    spec:
+      containers:
+      - name: telemetry-agent
+        image: busybox:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            echo "[$(date -u +'%Y-%m-%dT%H:%M:%SZ')] TELEMETRY STATUS OK: subsystem active"
+            sleep 3
+          done
+INNER_EOF
 EOF
 
 # Cluster 2 (cka2560: Q2, Q7, Q11)

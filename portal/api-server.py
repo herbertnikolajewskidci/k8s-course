@@ -17,11 +17,42 @@ PORT = 8092
 CONTAINER_NAME = "cka-psi-webtop"
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 FLAGS_FILE = os.path.join(DATA_DIR, "drill-flags.json")
+REVIEWS_FILE = os.path.join(DATA_DIR, "review-flags.json")
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
+
+def get_review_flags() -> dict:
+    """Read review flags (PSI 2-minute flags) from JSON file or return default empty state."""
+    if os.path.exists(REVIEWS_FILE):
+        try:
+            with open(REVIEWS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logging.error("Failed to read review-flags.json: %s", str(e))
+    return {"reviewFlags": [], "updatedAt": None}
+
+def save_review_flags(flags: list) -> dict:
+    """Save review flags list to JSON file atomically."""
+    cleaned_flags = sorted(list(set(int(x) for x in flags if str(x).isdigit() and int(x) > 0)))
+    data = {
+        "reviewFlags": cleaned_flags,
+        "updatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+    tmp_file = f"{REVIEWS_FILE}.tmp"
+    try:
+        with open(tmp_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        os.replace(tmp_file, REVIEWS_FILE)
+        logging.info("Updated review flags: %s", cleaned_flags)
+        return data
+    except Exception as e:
+        logging.error("Failed to save review-flags.json: %s", str(e))
+        if os.path.exists(tmp_file):
+            os.remove(tmp_file)
+        raise
 
 def get_drill_flags() -> dict:
     """Read drill flags from JSON file or return default empty state."""
@@ -113,6 +144,15 @@ class DocHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(data).encode())
             return
 
+        if path in ("/review-flags", "/api/review-flags"):
+            data = get_review_flags()
+            self.send_response(200)
+            self._send_cors_headers()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(data).encode())
+            return
+
         if path in ("/open-doc", "/api/open-doc"):
             params = urllib.parse.parse_qs(parsed.query)
             url = params.get("url", [None])[0]
@@ -186,6 +226,40 @@ class DocHandler(http.server.BaseHTTPRequestHandler):
 
         if path in ("/drill-flags/reset", "/api/drill-flags/reset"):
             updated = save_drill_flags([])
+            self.send_response(200)
+            self._send_cors_headers()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": True, **updated}).encode())
+            return
+
+        if path in ("/review-flags", "/api/review-flags"):
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else "{}"
+            try:
+                payload = json.loads(body)
+            except Exception:
+                payload = {}
+
+            if "reviewFlags" in payload and isinstance(payload["reviewFlags"], list):
+                updated = save_review_flags(payload["reviewFlags"])
+            else:
+                self.send_response(400)
+                self._send_cors_headers()
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Invalid payload. Provide 'reviewFlags'"}).encode())
+                return
+
+            self.send_response(200)
+            self._send_cors_headers()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": True, **updated}).encode())
+            return
+
+        if path in ("/review-flags/reset", "/api/review-flags/reset"):
+            updated = save_review_flags([])
             self.send_response(200)
             self._send_cors_headers()
             self.send_header("Content-Type", "application/json")

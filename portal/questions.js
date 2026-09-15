@@ -635,14 +635,14 @@ window.QUESTIONS = [
         <code>ssh cka6016</code>
       </div>
 
-      <p>In namespace <code>project-tiger</code>, Pod <code>tiger-telemetry</code> is running on the cluster.</p>
+      <p>In namespace <code>project-tiger</code>, the workload <code>tiger-telemetry</code> (Pod <code>tiger-telemetry-*</code>) is running on the cluster.</p>
 
       <h4>Task Requirements:</h4>
       <ul>
         <li>SSH into host: <code>ssh cka6016</code>.</li>
         <li>Using the container runtime CLI <code>crictl</code>:
           <ul>
-            <li>Find the container ID of the application container.</li>
+            <li>Find the container ID of the application container (<code>telemetry-agent</code>).</li>
             <li>Inspect the container to determine its <code>runtimeType</code> (from <code>crictl inspect</code>).</li>
             <li>Write the discovered <code>runtimeType</code> into <code>/course/17/runtime-type.txt</code>.</li>
             <li>Save the application container's logs into <code>/course/17/container.log</code>.</li>

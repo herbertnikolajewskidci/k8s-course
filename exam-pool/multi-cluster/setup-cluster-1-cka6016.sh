@@ -165,29 +165,36 @@ spec:
         emptyDir: {}
 EOF
 
-# Q17: crictl Pod
+# Q17: crictl Pod Workload
 mkdir -p /course/17/
 kubectl create ns project-tiger --dry-run=client -o yaml | kubectl apply -f -
 cat << 'EOF' | kubectl apply -f -
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: tiger-telemetry
   namespace: project-tiger
-  labels:
-    app: tiger-telemetry
 spec:
-  containers:
-  - name: telemetry-agent
-    image: busybox:latest
-    command:
-    - /bin/sh
-    - -c
-    - |
-      while true; do
-        echo "[$(date -u +'%Y-%m-%dT%H:%M:%SZ')] TELEMETRY STATUS OK: subsystem active"
-        sleep 3
-      done
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tiger-telemetry
+  template:
+    metadata:
+      labels:
+        app: tiger-telemetry
+    spec:
+      containers:
+      - name: telemetry-agent
+        image: busybox:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            echo "[$(date -u +'%Y-%m-%dT%H:%M:%SZ')] TELEMETRY STATUS OK: subsystem active"
+            sleep 3
+          done
 EOF
 
 # Permissions

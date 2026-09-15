@@ -341,6 +341,61 @@ async function run() {
     assert.strictEqual(await drillBadge.isVisible(), false, 'Drill badge is hidden after unmarking');
     console.log("✅ Herbert's Drill Button: Toggle, badge, dropdown icon, and API integration verified.");
 
+    // 9. Flag & Drill Persistence across Page Reload
+    console.log("Testing Review Flag (#btnFlag) & Drill Flag (#btnDrill) Persistence across Page Reload...");
+    const btnFlag = page.locator('#btnFlag');
+
+    // Select Question 3 (index 2)
+    await select.selectOption('2');
+    assert.strictEqual(await taskNumber.textContent(), 'Question 3 of 17');
+
+    // Mark Question 3 with both Flag and Drill
+    await btnFlag.click();
+    assert.ok((await btnFlag.getAttribute('class')).includes('flagged'), 'btnFlag receives flagged class');
+    await btnDrill.click();
+    assert.ok((await btnDrill.getAttribute('class')).includes('drilled'), 'btnDrill receives drilled class');
+
+    // Select Question 7 (index 6) and mark with Flag
+    await select.selectOption('6');
+    assert.strictEqual(await taskNumber.textContent(), 'Question 7 of 17');
+    await btnFlag.click();
+    assert.ok((await btnFlag.getAttribute('class')).includes('flagged'), 'btnFlag receives flagged class on Q7');
+
+    // Verify dropdown shows prefixes before reload
+    const optQ3Before = await select.locator('option[value="2"]').textContent();
+    const optQ7Before = await select.locator('option[value="6"]').textContent();
+    assert.ok(optQ3Before.includes('⚑'), 'Q3 has ⚑ before reload');
+    assert.ok(optQ7Before.includes('⚑'), 'Q7 has ⚑ before reload');
+
+    // Reload page
+    console.log('Reloading page to test persistence...');
+    await page.reload();
+    await page.waitForTimeout(500);
+
+    // Verify Question 7 remains the active question after reload
+    assert.strictEqual(await taskNumber.textContent(), 'Question 7 of 17', 'Active question index persists across reload');
+    assert.ok((await btnFlag.getAttribute('class')).includes('flagged'), 'btnFlag retains flagged class on Q7 after reload');
+
+    // Navigate back to Question 3 and verify persisted states
+    await select.selectOption('2');
+    assert.strictEqual(await taskNumber.textContent(), 'Question 3 of 17');
+    assert.ok((await btnFlag.getAttribute('class')).includes('flagged'), 'btnFlag retains flagged class on Q3 after reload');
+    assert.ok((await btnDrill.getAttribute('class')).includes('drilled'), 'btnDrill retains drilled class on Q3 after reload');
+    assert.strictEqual(await drillBadge.isVisible(), true, 'drillBadge visible on Q3 after reload');
+
+    const optQ3After = await select.locator('option[value="2"]').textContent();
+    const optQ7After = await select.locator('option[value="6"]').textContent();
+    assert.ok(optQ3After.includes('⚑'), 'Q3 retains ⚑ in dropdown after reload');
+    assert.ok(optQ7After.includes('⚑'), 'Q7 retains ⚑ in dropdown after reload');
+
+    // Cleanup: unflag both questions
+    await btnFlag.click(); // Unflag Q3
+    await btnDrill.click(); // Undrill Q3
+    await select.selectOption('6');
+    await btnFlag.click(); // Unflag Q7
+    await select.selectOption('0'); // Return to Question 1
+    console.log('✅ Reload Persistence: Active question, Review Flags (⚑), and Drill Flags fully survive page reload.');
+
     console.log('\n🎉 ALL ACCEPTANCE CRITERIA VERIFIED SUCCESSFULLY!');
   } finally {
     await browser.close();

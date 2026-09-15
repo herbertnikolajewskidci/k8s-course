@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. Initialize Question Navigation & Dropdown
   function initQuestions() {
+    loadReviewFlagsLocally();
     loadDrillFlagsLocally();
     renderQuestionDropdown();
 
@@ -107,7 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    loadQuestion(0);
+    const initialIndex = loadActiveQuestionIndex();
+    loadQuestion(initialIndex);
+    syncReviewFlagsWithBackend();
     syncDrillFlagsWithBackend();
   }
 
@@ -138,7 +141,101 @@ document.addEventListener('DOMContentLoaded', () => {
       btnFlag.querySelector('.flag-text').textContent = 'Flagged';
       showToast(`Question ${questions[currentQuestionIndex].id} flagged for review!`);
     }
+    saveReviewFlagsLocally();
     renderQuestionDropdown();
+    syncReviewFlagsToBackend();
+  }
+
+  function saveReviewFlagsLocally() {
+    try {
+      const activeIds = Array.from(flaggedQuestions)
+        .map(idx => questions[idx] ? questions[idx].id : idx + 1);
+      localStorage.setItem('cka_review_flags', JSON.stringify(activeIds));
+    } catch (e) {
+      console.warn('Could not save review flags to localStorage:', e);
+    }
+  }
+
+  function loadReviewFlagsLocally() {
+    try {
+      const raw = localStorage.getItem('cka_review_flags');
+      if (raw) {
+        const ids = JSON.parse(raw);
+        if (Array.isArray(ids)) {
+          ids.forEach(id => {
+            const idx = questions.findIndex(q => q.id === id);
+            if (idx !== -1) flaggedQuestions.add(idx);
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load review flags from localStorage:', e);
+    }
+  }
+
+  async function syncReviewFlagsWithBackend() {
+    try {
+      const res = await fetch('/api/review-flags');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.reviewFlags && Array.isArray(data.reviewFlags)) {
+          data.reviewFlags.forEach(id => {
+            const idx = questions.findIndex(q => q.id === id);
+            if (idx !== -1) flaggedQuestions.add(idx);
+          });
+          saveReviewFlagsLocally();
+          updateFlagUI();
+          renderQuestionDropdown();
+        }
+      }
+    } catch (err) {
+      console.warn('Could not sync review flags with backend:', err);
+    }
+  }
+
+  async function syncReviewFlagsToBackend() {
+    try {
+      const activeIds = Array.from(flaggedQuestions)
+        .map(idx => questions[idx] ? questions[idx].id : idx + 1);
+      await fetch('/api/review-flags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewFlags: activeIds })
+      });
+    } catch (err) {
+      console.warn('Backend review flag sync failed:', err);
+    }
+  }
+
+  function updateFlagUI() {
+    if (btnFlag) {
+      if (flaggedQuestions.has(currentQuestionIndex)) {
+        btnFlag.classList.add('flagged');
+        btnFlag.querySelector('.flag-text').textContent = 'Flagged';
+      } else {
+        btnFlag.classList.remove('flagged');
+        btnFlag.querySelector('.flag-text').textContent = 'Flag';
+      }
+    }
+  }
+
+  function saveActiveQuestionIndex(idx) {
+    try {
+      localStorage.setItem('cka_active_question_idx', idx.toString());
+    } catch (e) {}
+  }
+
+  function loadActiveQuestionIndex() {
+    try {
+      const raw = localStorage.getItem('cka_active_question_idx');
+      if (raw !== null) {
+        const idx = parseInt(raw, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < questions.length) {
+          return idx;
+        }
+      }
+    } catch (e) {}
+    return 0;
   }
 
   function saveDrillFlagsLocally() {
@@ -239,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadQuestion(index) {
     if (index < 0 || index >= questions.length) return;
     currentQuestionIndex = index;
+    saveActiveQuestionIndex(index);
     const q = questions[index];
 
     taskNumber.textContent = `Question ${q.id} of ${questions.length}`;
