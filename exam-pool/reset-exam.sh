@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Exam Simulator Multi-Cluster Deterministic Reset Engine (V5)
+# Exam Simulator Multi-Cluster Deterministic Reset Engine (V6)
 # Restores all 6 authentic Killer.sh clusters across the 7 VMs into pristine unsolved state.
-# Wipes all student solution files under /course/, resets configurations, corrupts Kubelet on cka1024,
-# resets student drill flags, and automatically audits/verifies the reset state.
+# Wipes all student solution files under /course/ and /home/cka-admin/, cleans bash/vim history,
+# resets broken configurations, corrupts Kubelet on cka1024, resets student drill flags,
+# and automatically audits/verifies the reset state across all VMs.
 
 set -euo pipefail
 
@@ -17,12 +18,17 @@ echo "--> [Portal] Resetting student drill flags via HTTPS :8091..."
 curl -k -s -X POST https://192.168.131.223:8091/api/drill-flags/reset >/dev/null 2>&1 || \
 curl -s -X POST http://192.168.131.223:8090/api/drill-flags/reset >/dev/null 2>&1 || true
 
-# 2. Parallel Reset across all 6 Clusters
-echo "--> [Clusters] Executing parallel cluster resets across 7 KVM VMs..."
+# 2. Parallel Reset across all 6 Clusters (7 KVM VMs)
+echo "--> [Clusters] Executing parallel cluster & home-dir resets across 7 VMs..."
 
 # Cluster 1 (cka6016: Q1, Q10, Q15, Q17)
 ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 cka6016 bash << 'EOF' &
   set -euo pipefail
+  # Wipe home directory non-dotfiles & history
+  find /home/cka-admin -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} + 2>/dev/null || true
+  > /home/cka-admin/.bash_history 2>/dev/null || true
+  rm -f /home/cka-admin/.viminfo /tmp/*.yaml /tmp/*.yml /tmp/*.json 2>/dev/null || true
+
   # Q1: Restore broken router-endpoints ConfigMap & rollout restart
   kubectl apply -f - << 'INNER_EOF' >/dev/null 2>&1
 apiVersion: v1
@@ -62,7 +68,7 @@ spec:
         command: ["sh", "-c", "echo 'Batch job processed data' > /mnt/job-data/output.log && sleep 5"]
 INNER_EOF
 
-  # Q15: Uncordon node
+  # Q15: Node Uncordon
   kubectl uncordon cka6016 >/dev/null 2>&1 || true
 
   # Q17: Purge runtime inspection logs & outputs
@@ -72,6 +78,11 @@ EOF
 # Cluster 2 (cka2560: Q2, Q7, Q11)
 ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 cka2560 bash << 'EOF' &
   set -euo pipefail
+  # Wipe home directory non-dotfiles & history
+  find /home/cka-admin -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} + 2>/dev/null || true
+  > /home/cka-admin/.bash_history 2>/dev/null || true
+  rm -f /home/cka-admin/.viminfo /tmp/*.yaml /tmp/*.yml /tmp/*.json 2>/dev/null || true
+
   # Q2: Purge student kubeconfig extractions (keep only initial kubeconfig)
   rm -f /course/2/contexts /course/2/current-context /course/2/cert /course/2/*.txt 2>/dev/null || true
 
@@ -83,9 +94,14 @@ ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 cka2560 bash << 'EOF' &
   kubectl patch pv pv-retained-data -p '{"spec":{"claimRef":{"namespace":"storage-recovery","name":"old-pvc"}}}' >/dev/null 2>&1 || true
 EOF
 
-# Cluster 3 (cka5248: Q3, Q9, Q12)
+# Cluster 3 Master (cka5248: Q3, Q9, Q12)
 ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 cka5248 bash << 'EOF' &
   set -euo pipefail
+  # Wipe home directory non-dotfiles & history
+  find /home/cka-admin -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} + 2>/dev/null || true
+  > /home/cka-admin/.bash_history 2>/dev/null || true
+  rm -f /home/cka-admin/.viminfo /tmp/*.yaml /tmp/*.yml /tmp/*.json 2>/dev/null || true
+
   # Q3: Delete multi-container Pod
   kubectl delete pod collector -n project-tiger --ignore-not-found=true >/dev/null 2>&1 || true
 
@@ -115,9 +131,22 @@ INNER_EOF
   kubectl delete pod db-client -n secret-mgmt --ignore-not-found=true >/dev/null 2>&1 || true
 EOF
 
+# Cluster 3 Dedicated Worker (cka5248-node1)
+ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 cka5248-node1 bash << 'EOF' &
+  set -euo pipefail
+  find /home/cka-admin -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} + 2>/dev/null || true
+  > /home/cka-admin/.bash_history 2>/dev/null || true
+  rm -f /home/cka-admin/.viminfo /tmp/*.yaml /tmp/*.yml /tmp/*.json 2>/dev/null || true
+EOF
+
 # Cluster 4 (cka3200: Q4, Q13, Q16)
 ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 cka3200 bash << 'EOF' &
   set -euo pipefail
+  # Wipe home directory non-dotfiles & history
+  find /home/cka-admin -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} + 2>/dev/null || true
+  > /home/cka-admin/.bash_history 2>/dev/null || true
+  rm -f /home/cka-admin/.viminfo /tmp/*.yaml /tmp/*.yml /tmp/*.json 2>/dev/null || true
+
   # Q4: Delete probe checker and backend Pod
   kubectl delete pod probe-checker backend-pod -n project-alpha --ignore-not-found=true >/dev/null 2>&1 || true
 
@@ -134,6 +163,11 @@ EOF
 # Cluster 5 (cka8448: Q5, Q8, Q14)
 ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 cka8448 bash << 'EOF' &
   set -euo pipefail
+  # Wipe home directory non-dotfiles & history
+  find /home/cka-admin -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} + 2>/dev/null || true
+  > /home/cka-admin/.bash_history 2>/dev/null || true
+  rm -f /home/cka-admin/.viminfo /tmp/*.yaml /tmp/*.yml /tmp/*.json 2>/dev/null || true
+
   # Q5: Purge certificate info txt
   rm -f /course/5/*.txt /course/5/*.log 2>/dev/null || true
 
@@ -147,6 +181,11 @@ EOF
 # Cluster 6 (cka1024: Q6 Kubelet Crash)
 ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 cka1024 bash << 'EOF' &
   set -euo pipefail
+  # Wipe home directory non-dotfiles & history
+  find /home/cka-admin -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} + 2>/dev/null || true
+  > /home/cka-admin/.bash_history 2>/dev/null || true
+  rm -f /home/cka-admin/.viminfo /tmp/*.yaml /tmp/*.yml /tmp/*.json 2>/dev/null || true
+
   DROPIN=/usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
   if [ -f "$DROPIN" ]; then
     sudo sed -i 's|ExecStart=/usr/bin/kubelet|ExecStart=/usr/local/bin/kubelet-corrupted|' "$DROPIN"
@@ -160,12 +199,11 @@ wait
 END_RESET_TIME=$(date +%s)
 RESET_DURATION=$((END_RESET_TIME - START_TIME))
 
-echo "--> [Reset Complete] All 6 clusters processed in ${RESET_DURATION}s."
+echo "--> [Reset Complete] All 6 clusters & 7 home directories processed in ${RESET_DURATION}s."
 
 # 3. Built-in Deterministic Self-Audit / Verification
-echo "--> [Self-Audit] Verifying pristine state across clusters and portal..."
+echo "--> [Self-Audit] Verifying pristine state across clusters, home-dirs, and portal..."
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AUDIT_ERRORS=0
 
 # Check Portal Drill Flags
@@ -192,6 +230,20 @@ if [ "$Q5_FILES" -gt 0 ]; then
   AUDIT_ERRORS=$((AUDIT_ERRORS + 1))
 else
   echo "  ✓ Cluster 5 (/course/5/ & /course/14/): Clean"
+fi
+
+# Check Home Directories on all 7 VMs
+TOTAL_HOME_FILES=0
+for vm in cka6016 cka2560 cka5248 cka5248-node1 cka3200 cka8448 cka1024; do
+  COUNT=$(ssh -o StrictHostKeyChecking=no "$vm" "find /home/cka-admin -mindepth 1 -maxdepth 1 ! -name '.*' | wc -l" 2>/dev/null || echo 0)
+  TOTAL_HOME_FILES=$((TOTAL_HOME_FILES + COUNT))
+done
+
+if [ "$TOTAL_HOME_FILES" -gt 0 ]; then
+  echo "  ⚠️ Warning: Some VM home directories still contain student files ($TOTAL_HOME_FILES found)!"
+  AUDIT_ERRORS=$((AUDIT_ERRORS + 1))
+else
+  echo "  ✓ All 7 VM home directories (/home/cka-admin): Pristine (0 non-dotfiles)"
 fi
 
 # Check Q6 Kubelet failure status
