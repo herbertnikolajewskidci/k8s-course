@@ -78,8 +78,8 @@ Formate hinterlegt, sodass die DNS-Auflösung in den Pod-Logs fehlschlägt.
      `storage-tier`.
    - `ENDPOINT_PRIMARY_POD`: Der Pod `vault-0` hinter dem Headless Service
      im Namespace `storage-tier` (IP-unabhängig!).
-   - `ENDPOINT_MONITOR`: Der Pod `monitor-agent` im Namespace `monitoring`
-     (anhand seiner aktuellen Pod-IP im FQDN-Dash-Format).
+   - `ENDPOINT_MONITOR`: Der `monitor-agent`-DaemonSet-Pod im Namespace
+     `monitoring` (anhand seiner aktuellen Pod-IP im FQDN-Dash-Format).
 4. Starte das Deployment `service-router` im Namespace `core-routing` neu
    (`rollout restart`).
 5. Überprüfe die Logs eines der neu gestarteten Pods und stelle sicher, dass
@@ -92,7 +92,7 @@ Formate hinterlegt, sodass die DNS-Auflösung in den Pod-Logs fehlschlägt.
 
 ```bash
 # 1. Pod-IP des Monitor-Pods ermitteln
-kubectl get pod monitor-agent -n monitoring -o wide
+kubectl get pods -n monitoring -o wide
 # IP z. B.: 10.244.0.5 -> FQDN: 10-244-0-5.monitoring.pod.cluster.local
 
 # 2. ConfigMap editieren

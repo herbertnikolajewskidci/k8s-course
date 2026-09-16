@@ -7,7 +7,7 @@ set -euo pipefail
 echo "=== [Slot 01 Test] Wende Loesung an und verifiziere ==="
 
 # 1. Ermittle die tatsaechliche Pod-IP des Monitor-Pods im Cluster
-MONITOR_IP=$(kubectl get pod monitor-agent -n monitoring -o jsonpath='{.status.podIP}')
+MONITOR_IP=$(kubectl get pod -n monitoring -l app=monitor-agent -o jsonpath='{.items[0].status.podIP}' 2>/dev/null || kubectl get pod monitor-agent -n monitoring -o jsonpath='{.status.podIP}')
 echo "Ermittelte Monitor-Pod-IP: $MONITOR_IP"
 MONITOR_DNS=$(echo "$MONITOR_IP" | tr '.' '-')".monitoring.pod.cluster.local"
 echo "Generierter FQDN fuer Pod-IP: $MONITOR_DNS"

@@ -50,9 +50,12 @@ Passe die ConfigMap `router-endpoints` in Namespace `core-routing` an:
    Namespace `storage-tier` zeigen.
 3. `ENDPOINT_PRIMARY_POD`: Soll auf den spezifischen ersten Pod
    `vault-0` dieses Headless Service zeigen.
-4. `ENDPOINT_MONITOR`: Ermittle die IP des Pods `monitor-agent` im
-   Namespace `monitoring` und trage sie im standardisierten
-   Kubernetes-Pod-DNS-Format ein (`<ip-mit-bindestrichen>.monitoring.pod...`).
+4. `ENDPOINT_MONITOR`: Ermittle die IP des `monitor-agent`-Pods
+   (DaemonSet) im Namespace `monitoring` (via
+   `kubectl get pods -n monitoring -o wide`) und trage sie im
+   standardisierten Kubernetes-Pod-DNS-Format ein
+   (`<ip-mit-bindestrichen>.monitoring.pod.cluster.local`). (Hinweis: Als
+   DaemonSet trägt der Pod das Suffix `monitor-agent-xxxxx`).
 
 ### Aufgabe 2: Router neu starten & verifizieren
 
@@ -70,7 +73,8 @@ Passe die ConfigMap `router-endpoints` in Namespace `core-routing` an:
   `Concepts -> Services, Networking -> DNS for Services and Pods`
 - **In-Page Suche (Strg+F):** `pod-template-hash` oder `pod.cluster.local`
 - **In-Terminal Fastpath:**
-  - `kubectl get pod monitor-agent -n monitoring -o jsonpath='{.status.podIP}'`
+  - `kubectl get pods -n monitoring -o wide`
+  - `kubectl get pod -n monitoring -l app=monitor-agent -o jsonpath='{.items[0].status.podIP}'`
   - `echo $POD_IP | tr '.' '-'`
 
 ---

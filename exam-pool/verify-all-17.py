@@ -57,7 +57,7 @@ def evaluate_cluster_1(host="cka6016") -> dict:
     """Evaluate Q1, Q10, Q15, Q17 on cka6016."""
     script = """
     # Q1
-    MONITOR_IP=$(kubectl get pod monitor-agent -n monitoring -o jsonpath='{.status.podIP}' 2>/dev/null || echo "")
+    MONITOR_IP=$(kubectl get pod -n monitoring -l app=monitor-agent -o jsonpath='{.items[0].status.podIP}' 2>/dev/null || kubectl get pod monitor-agent -n monitoring -o jsonpath='{.status.podIP}' 2>/dev/null || echo "")
     EXPECTED_MONITOR_DNS=$(echo "$MONITOR_IP" | tr '.' '-')".monitoring.pod.cluster.local"
     CM_CORE=$(kubectl get cm router-endpoints -n core-routing -o jsonpath='{.data.ENDPOINT_CORE}' 2>/dev/null || echo "")
     CM_STOR=$(kubectl get cm router-endpoints -n core-routing -o jsonpath='{.data.ENDPOINT_STORAGE}' 2>/dev/null || echo "")
@@ -80,7 +80,7 @@ def evaluate_cluster_1(host="cka6016") -> dict:
     # Q15
     UNSCHED=$(kubectl get node cka6016 -o jsonpath='{.spec.unschedulable}' 2>/dev/null || echo "false")
     READY=$(kubectl get node cka6016 -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
-    DRAIN_PODS=$(kubectl get pods -l app=drain-test --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
+    DRAIN_PODS=$(kubectl get pods -n maintenance-drill -l app=drain-test --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
     echo "---Q15---"
     echo "UNSCHED:$UNSCHED|READY:$READY|DRAIN_PODS:$DRAIN_PODS"
 
@@ -652,7 +652,7 @@ def evaluate_cluster_5(host="cka8448") -> dict:
     echo "NETPOL:$NETPOL_EXISTS|ALLOW:$ALLOW_CHECK|BLOCK:$BLOCK_CHECK"
 
     # Q14
-    SNAP_SIZE=$(wc -c < /course/14/backup/etcd-snapshot.db 2>/dev/null || echo 0)
+    SNAP_SIZE=$(stat -c %s /course/14/backup/etcd-snapshot.db 2>/dev/null || sudo stat -c %s /course/14/backup/etcd-snapshot.db 2>/dev/null || echo 0)
     STAT_EXISTS=$(test -s /course/14/backup/status.txt && echo "YES" || echo "NO")
     STAT_HASH=$(grep -i "hash" /course/14/backup/status.txt 2>/dev/null | wc -l)
     echo "---Q14---"

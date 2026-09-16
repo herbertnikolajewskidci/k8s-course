@@ -36,27 +36,33 @@ Ein Service ist wie ein Club-Türsteher:
 
 Host für diese Aufgabe: `ssh cka3200`.
 
-Im Namespace `probe-system` soll ein Service namens `backend-service`
-Traffic an einen Backend-Pod weiterleiten. Momentan zeigt der Service
-jedoch `Endpoints: <none>`.
+Im Namespace `project-alpha` ist ein ClusterIP-Service namens `backend-service`
+auf Port `80` vorkonfiguriert, besitzt momentan jedoch keine aktiven Endpoints.
 
-### Aufgabe 1: Pod-Labels & Service-Selector abgleichen
+### Aufgabe 1: Überwachungs-Pod mit ReadinessProbe erstellen
 
-1. Untersuche den Service `backend-service` und den Pod `backend-pod` in
-   `probe-system`.
-2. Korrigiere die Labels des Pods bzw. den Selector des Services, sodass
-   die Selektoren übereinstimmen.
-
-### Aufgabe 2: ReadinessProbe mit wget konfigurieren
-
-1. Erstelle einen Überwachungs-Pod `probe-checker` (Image: `busybox:latest`),
-   der alle 5 Sekunden prüft, ob `backend-service.probe-system.svc.cluster.local:80`
-   erreichbar ist.
-2. Konfiguriere eine `readinessProbe` vom Typ `exec`, die mittels:
+1. Erstelle im Namespace `project-alpha` einen Überwachungs-Pod namens
+   `probe-checker` mit Image `busybox:latest`.
+2. Der Container soll als Hintergrundprozess im Leerlauf laufen (z. B.
+   `command: ["sleep", "3600"]`).
+3. Konfiguriere eine `readinessProbe` vom Typ `exec`, die mittels `wget`
+   periodisch die HTTP-Erreichbarkeit des Services prüft:
    `wget -q -O - http://backend-service:80`
-   die Verfügbarkeit des Backends testet.
-3. Stelle sicher, dass der Service aktive Endpoints besitzt und
-   `probe-checker` den Zustand `1/1 Ready` erreicht.
+4. Bestätige, dass `probe-checker` initial im Zustand `0/1 Ready` verbleibt,
+   da der Backend-Service noch keine antwortenden Endpoints besitzt.
+
+### Aufgabe 2: Backend-Pod bereitstellen & Endpoints aktivieren
+
+1. Erstelle im Namespace `project-alpha` einen Pod namens `backend-pod` mit
+   Image `nginx:1-alpine`.
+2. Vergib die für `backend-service` erforderlichen Labels (siehe
+   `kubectl get svc backend-service -n project-alpha -o yaml`), damit der
+   Traffic an den Pod geroutet wird.
+3. **Achtung (Webserver-Falle):** Überschreibe beim `backend-pod` nicht den
+   Standard-Container-Befehl (kein `sleep`), damit der Nginx-Webserver startet
+   und auf Port 80 antwortet.
+4. Stelle sicher, dass `backend-service` einen aktiven Endpoint erhält und
+   `probe-checker` automatisch in den Zustand `1/1 Ready` wechselt.
 
 ---
 
@@ -64,16 +70,66 @@ jedoch `Endpoints: <none>`.
 
 - **kubernetes.io Suchbegriff:** `configure liveness readiness startup probes`
 - **Zielseite & Klickpfad:**
-  `Tasks -> Configure Pods and Containers -> Configure Liveness,`
+  `Tasks → Configure Pods and Containers → Configure Liveness,`
   `Readiness and Startup Probes`
-- **In-Page Suche (Strg+F):** `readinessProbe` oder `exec`
+- **In-Page Suche (`Strg+F`):** `readinessProbe` oder `exec`
 - **In-Terminal Fastpath:**
-  - `kubectl get endpoints -n probe-system`
+  - `kubectl get svc backend-service -n project-alpha -o yaml`
+  - `kubectl get endpoints -n project-alpha`
   - `kubectl explain pod.spec.containers.readinessProbe.exec`
 
 ---
 
 ## 4. Feedback & Korrekturen
 
-Noch keine Einreichung vorhanden.
-Nach deiner Bearbeitung folgt hier das direkte Review.
+### Ergebnis-Scorecard & Cluster-Prüfung: 7 / 7 Punkte (100% PASS)
+
+Die Lösung wurde live auf Cluster `cka3200` im Namespace `project-alpha`
+verifiziert. Ergebnis des Prüflaufs:
+
+- **Backend-Pod:** `backend-pod` läuft mit `1/1 Running` auf Node `cka3200`.
+- **Service-Endpoints:** `endpoints/backend-service` ist aktiv mit
+  `10.244.0.20:80`.
+- **ReadinessProbe:** `probe-checker` führt
+  `wget -q -O - http://backend-service:80` periodisch alle 5s aus.
+- **Probe-Status:** `probe-checker` hat nach Bereitstellung des Backends
+  erfolgreich auf `1/1 Ready` umgeschaltet.
+- **Evaluator-Status:** `verify-all-17.py` bewertet Q04 mit vollen 7/7 Punkten.
+
+---
+
+### Detailliertes Review & CKA-Prüfungs-Takeaways
+
+#### 1. Die Nginx-Einstiegspunkt-Falle
+
+Wird bei einem Webserver-Image wie `nginx:1-alpine` das Feld `command: [...]`
+mit `sleep` überschrieben, startet der Webserver-Daemon nicht. Der Container
+bleibt zwar als Prozess im Status `Running`, lauscht aber auf keinem TCP-Port.
+Jeder Probe- oder Service-Zugriff schlägt mit `Connection refused` fehl.
+
+*CKA-Regel:* Bei Backend-Images (Nginx, Apache, HTTP-Echo) das Feld `command`
+nur überschreiben, wenn explizit ein alternativer Serverbefehl verlangt wird.
+
+#### 2. Das Zusammenspiel von ReadinessProbe und Service-Endpoints
+
+- **Selector-Match:** Sobald die Labels (`app: backend-service`)
+  übereinstimmen, registriert der Endpoints-Controller den Pod grundsätzlich.
+- **Readiness-Filter:** Der Pod wird erst dann als aktiver Endpunkt in
+  die Serviceliste eingetragen, wenn alle ReadinessProbes `Success` (Exit 0)
+  melden.
+- In dieser Aufgabe diente `probe-checker` als Konsument, der erst dann auf
+  `Ready` schaltete, als der Service tatsächlich funktionierte.
+
+---
+
+### Doku- & In-Terminal Fastpath (Unter 30 Sekunden)
+
+- **kubernetes.io Docs-Suchfeld:** `configure liveness readiness startup probes`
+- **Zielseite:** `Tasks → Configure Pods and Containers → Configure Liveness,`
+  `Readiness and Startup Probes`
+- **In-Page Suche (`Strg+F`):** `Define a liveness command`
+- **In-Terminal Fastpath:**
+
+  ```bash
+  kubectl explain pod.spec.containers.readinessProbe.exec
+  ```

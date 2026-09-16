@@ -48,21 +48,30 @@ spec:
         - containerPort: 8200
 EOF
 
-if ! kubectl get pod monitor-agent -n monitoring >/dev/null 2>&1; then
+if ! kubectl get daemonset monitor-agent -n monitoring >/dev/null 2>&1; then
+  kubectl delete pod monitor-agent -n monitoring --ignore-not-found=true >/dev/null 2>&1 || true
   cat << 'EOF' | kubectl apply -f -
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: DaemonSet
 metadata:
   name: monitor-agent
   namespace: monitoring
   labels:
     app: monitor-agent
 spec:
-  containers:
-  - name: agent
-    image: nginx:1-alpine
-    ports:
-    - containerPort: 80
+  selector:
+    matchLabels:
+      app: monitor-agent
+  template:
+    metadata:
+      labels:
+        app: monitor-agent
+    spec:
+      containers:
+      - name: agent
+        image: nginx:1-alpine
+        ports:
+        - containerPort: 80
 EOF
 fi
 

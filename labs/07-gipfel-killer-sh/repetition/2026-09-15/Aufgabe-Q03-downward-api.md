@@ -79,5 +79,86 @@ Erstelle einen Pod namens `collector` in Namespace `project-tiger`:
 
 ## 4. Feedback & Korrekturen
 
-Noch keine Einreichung vorhanden.
-Nach deiner Bearbeitung folgt hier das direkte Review.
+### Ergebnis-Scorecard & Cluster-Prüfung: 6 / 6 Punkte (100% PASS)
+
+Die Lösung wurde live auf Cluster `cka5248` verifiziert.
+Ergebnis des automatisierten Prüflaufs:
+
+- **Pod-Status:** `collector` läuft mit `2/2 Running` auf Node
+  `cka5248-node1`.
+- **Downward API:** `HOST_NODE` wird korrekt über `spec.nodeName` an den
+  Producer übergeben und enthält zur Laufzeit `cka5248-node1`.
+- **Shared Volume:** Das `emptyDir`-Volume `shared-logs` ist in beiden
+  Containern unter `/var/log/app` eingehängt.
+- **Log-Streaming:** Der `consumer`-Container streamt die Einträge fortlaufend:
+  `cka5248-node1 Wed Sep 16 09:12:56 UTC 2026`
+
+---
+
+### Detailliertes Review & Feinheiten
+
+#### 1. Die `tail`-Syntax: `-n+1` vs. `-n-1`
+
+In deiner `consumer`-Definition steht:
+
+```yaml
+args:
+  - tail -n-1 -f /var/log/app/events.log
+```
+
+- **`tail -n 1` (oder `-n-1`):** Zeigt standardmäßig nur die **letzte Zeile**
+  der Datei und wartet dann via `-f` auf neue Zeilen.
+- **`tail -n +1`:** Das Plus-Zeichen (`+1`) weist `tail` an, **ab Zeile 1**
+  (also den gesamten Inhalt vom Dateianfang an) auszugeben und danach mit
+  `-f` weiterzustreamen.
+
+*CKA-Takeaway:* Wenn eine Prüfungsaufgabe `tail -n+1 -f` vorgibt, soll damit
+sichergestellt werden, dass auch Logs sichtbar sind, die der Producer vor dem
+Start des Consumers geschrieben hat.
+
+#### 2. YAML Multiline Folding mit Semikolons
+
+Im `producer`-Container hast du Folgendes notiert:
+
+```yaml
+      args:
+        - while true; do
+          echo $HOST_NODE $(date) >> /var/log/app/events.log;
+          sleep 5;
+          done;
+```
+
+YAML faltet mehrzeilige Strings innerhalb einer Liste standardmäßig mit
+Leerzeichen zusammen. Weil du hinter jede Zeile ein Semikolon gesetzt hast,
+entsteht für die Shell ein valider Einzeiler:
+`while true; do echo $HOST_NODE $(date) >> /var/log/app/events.log; sleep 5; done;`
+
+*Empfehlung für maximale Lesbarkeit ohne Semikolon-Zwang:*
+Der YAML-Block-Skalar `|`:
+
+```yaml
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          while true; do
+            echo "$HOST_NODE $(date)" >> /var/log/app/events.log
+            sleep 5
+          done
+```
+
+---
+
+### Doku- & In-Terminal Fastpath (Unter 30 Sekunden)
+
+- **kubernetes.io Docs-Suchfeld:** `downward api environment variable`
+- **Zielseite:** `Tasks → Inject Data into Applications → Expose Pod Information`
+  `to Containers Through Environment Variables`
+- **In-Page Suche (`Strg+F`):** `spec.nodeName`
+- **In-Terminal Fastpath (ohne Browser):**
+
+  ```bash
+  kubectl explain pod.spec.containers.env.valueFrom.fieldRef
+  ```
+
+  Zeigt direkt das Pflichtfeld `fieldPath` und die erlaubten Felder
+  (`spec.nodeName`, `metadata.name`, `status.podIP` etc.).

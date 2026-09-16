@@ -74,6 +74,11 @@ EOF
 # Q14: etcd Backup
 mkdir -p /course/14/backup/
 mkdir -p /var/lib/etcd-restore/
+if [ ! -f /usr/local/bin/etcdctl ] || [ ! -f /usr/local/bin/etcdutl ]; then
+  find /var/lib/containerd -name etcdctl -exec cp {} /usr/local/bin/ \; 2>/dev/null || true
+  find /var/lib/containerd -name etcdutl -exec cp {} /usr/local/bin/ \; 2>/dev/null || true
+  chmod +x /usr/local/bin/etcdctl /usr/local/bin/etcdutl 2>/dev/null || true
+fi
 
 # Permissions
 mkdir -p /course

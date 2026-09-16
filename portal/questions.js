@@ -38,7 +38,7 @@ window.QUESTIONS = [
             <li><code>ENDPOINT_CORE</code>: The service <code>kubernetes</code> in namespace <code>default</code>.</li>
             <li><code>ENDPOINT_STORAGE</code>: The headless service <code>storage-vault</code> in namespace <code>storage-tier</code>.</li>
             <li><code>ENDPOINT_PRIMARY_POD</code>: The Pod named <code>vault-0</code> backing the headless service in namespace <code>storage-tier</code> (IP-independent).</li>
-            <li><code>ENDPOINT_MONITOR</code>: The Pod <code>monitor-agent</code> in namespace <code>monitoring</code> (resolve its active Pod IP via DNS).</li>
+            <li><code>ENDPOINT_MONITOR</code>: The active Pod of the <code>monitor-agent</code> DaemonSet in namespace <code>monitoring</code> (find its active IP via <code>kubectl get pods -n monitoring -o wide</code> and format as <code>&lt;ip-with-dashes&gt;.monitoring.pod.cluster.local</code>).</li>
           </ul>
         </li>
         <li>Ensure the deployment <code>service-router</code> picks up the configuration changes.</li>

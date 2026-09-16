@@ -13,3 +13,6 @@ docs/exam-references/
 # Test outputs
 test-results/
 tests/*.png
+__pycache__/
+*.pyc
+

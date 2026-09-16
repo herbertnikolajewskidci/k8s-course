@@ -82,5 +82,67 @@ wieder freigegeben werden.
 
 ## 4. Feedback & Korrekturen
 
-Noch keine Einreichung vorhanden.
-Nach deiner Bearbeitung folgt hier das direkte Review.
+### Ergebnis-Scorecard & Cluster-Prüfung: 6 / 6 Punkte (100% PASS)
+
+Die Lösung wurde live auf Host `cka6016` verifiziert.
+Ergebnis des Prüflaufs:
+
+- **Drain-Ausführung:** `kubectl drain cka6016 --ignore-daemonsets --delete-emptydir-data`
+  lief fehlerfrei durch. Alle DaemonSets wurden ignoriert, alle Workloads
+  sauber evakuiert.
+- **Node-Status während der Wartung:** `cka6016` meldete vorschriftsmäßig
+  `Ready,SchedulingDisabled`.
+- **Workload-Verhalten:** Die evakuierten Pods des Deployments
+  `worker-drain-test` gingen während der Sperre erwartungsgemäß in den
+  Status `Pending`.
+- **Wiederinbetriebnahme (Uncordon):** `kubectl uncordon cka6016` hob die
+  Scheduling-Sperre auf.
+- **Endzustand:** `cka6016` meldet `Ready` (ohne SchedulingDisabled), und
+  beide Replicas von `worker-drain-test` laufen wieder stabil im Status
+  `1/1 Running`.
+
+---
+
+### Detailliertes Review & CKA-Prüfungs-Takeaways
+
+#### 1. Die beiden Pflicht-Flags im Fingergedächtnis
+
+In der CKA-Prüfung verlangt fast jedes Node-Maintenance- oder
+Upgrade-Szenario genau diese beiden Flags:
+
+- `--ignore-daemonsets`: Weil System-Dienste wie Netzwerk-Plugins (Flannel,
+  Calico) an den physischen Node gebunden sind und niemals evakuiert werden
+  können.
+- `--delete-emptydir-data`: Weil Pods mit temporären Verzeichnissen
+  (`emptyDir`) beim Löschen ihre lokalen Zwischendaten verlieren. Kubernetes
+  fordert dieses Flag als explizite Bestätigung, dass dieser Datenverlust
+  akzeptiert wird.
+
+#### 2. Der Lifecycle auf Single-Node-Clustern
+
+Dein Log zeigt ein sehr wichtiges Verhalten:
+
+```text
+cka-admin@cka6016:~$ k -n maintenance-drill get pods
+NAME READY STATUS RESTARTS AGE
+worker-drain-test-6bbd6f8595-5tlg6 0/1 Pending 0 5m40s
+worker-drain-test-6bbd6f8595-khxkm 0/1 Pending 0 5m46s
+```
+
+Wenn ein Node gedraint wird, löscht Kubernetes die alten Pods. Der
+Deployment-Controller erstellt sofort neue Pods – diese bleiben aber im
+Status `Pending`, solange der Node `SchedulingDisabled` ist. Erst nach dem
+`uncordon` weist der Scheduler die Pods wieder zu und sie schalten auf
+`Running`.
+
+---
+
+### Doku- & In-Terminal Fastpath (Unter 15 Sekunden)
+
+- **In-Terminal Schnellhilfe:**
+
+  ```bash
+  kubectl drain -h | grep -E "(daemonsets|emptydir)"
+  ```
+
+  Zeigt sofort die beiden exakten Parameternamen ohne langes Suchen.

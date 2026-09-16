@@ -46,6 +46,34 @@ data:
 INNER_EOF
   kubectl rollout restart deployment service-router -n core-routing >/dev/null 2>&1 || true
 
+  # Ensure monitor-agent is managed by a DaemonSet (safe drain without bare pod blocking)
+  if ! kubectl get daemonset monitor-agent -n monitoring >/dev/null 2>&1; then
+    kubectl delete pod monitor-agent -n monitoring --ignore-not-found=true >/dev/null 2>&1 || true
+    kubectl apply -f - << 'INNER_EOF' >/dev/null 2>&1
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: monitor-agent
+  namespace: monitoring
+  labels:
+    app: monitor-agent
+spec:
+  selector:
+    matchLabels:
+      app: monitor-agent
+  template:
+    metadata:
+      labels:
+        app: monitor-agent
+    spec:
+      containers:
+      - name: agent
+        image: nginx:1-alpine
+        ports:
+        - containerPort: 80
+INNER_EOF
+  fi
+
   # Q10: Delete Job, PVC, StorageClass and restore clean data-job.yaml
   kubectl delete job data-job -n project-bern --ignore-not-found=true >/dev/null 2>&1 || true
   kubectl delete pvc job-pvc -n project-bern --ignore-not-found=true >/dev/null 2>&1 || true
@@ -204,8 +232,13 @@ ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 cka8448 bash << 'EOF' &
   # Q8: Delete NetworkPolicy
   kubectl delete netpol backend-policy -n secure-zone --ignore-not-found=true >/dev/null 2>&1 || true
 
-  # Q14: Purge etcd backup files and test restore directories
+  # Q14: Purge etcd backup files and test restore directories, ensure binaries
   rm -rf /course/14/backup/* /var/lib/etcd-restore/* 2>/dev/null || true
+  if [ ! -f /usr/local/bin/etcdctl ] || [ ! -f /usr/local/bin/etcdutl ]; then
+    sudo find /var/lib/containerd -name etcdctl -exec cp {} /usr/local/bin/ \; 2>/dev/null || true
+    sudo find /var/lib/containerd -name etcdutl -exec cp {} /usr/local/bin/ \; 2>/dev/null || true
+    sudo chmod +x /usr/local/bin/etcdctl /usr/local/bin/etcdutl 2>/dev/null || true
+  fi
 EOF
 
 # Cluster 6 (cka1024: Q6 Kubelet Crash)
