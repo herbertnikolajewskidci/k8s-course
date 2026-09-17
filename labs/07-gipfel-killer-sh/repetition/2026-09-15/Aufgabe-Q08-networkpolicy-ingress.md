@@ -50,29 +50,29 @@ Port 80. Dieser muss gegen unberechtigten Zugriff isoliert werden.
 Erstelle eine NetworkPolicy namens `backend-policy` im Namespace
 `secure-zone`:
 
-1. `podSelector`: Wähle die Backend-Pods mit dem Label `app: secure-backend`.
+1. `podSelector`: Wähle die Backend-Pods mit dem Label `role: backend`.
 2. `policyTypes`: Setze explizit `[Ingress]`.
-3. Erlaube Ingress **nur** von Pods mit dem Label `role: allowed-client`
-   aus demselben Namespace `secure-zone` auf TCP Port 80.
+3. Erlaube Ingress auf TCP Port 80 **nur** von Pods mit dem Label
+   `role: frontend` aus demselben Namespace `secure-zone`.
 4. Schließe jeglichen Traffic aus anderen Namespaces (z. B. `external-zone`)
    aus.
 
 ### Aufgabe 2: Zugriffskontrolle verifizieren
 
-1. Teste den erlaubten Zugriff:
+1. Teste den erlaubten Zugriff aus dem Frontend-Pod:
 
    ```bash
-   kubectl exec -n secure-zone allowed-client -- wget -qO- --timeout=2 http://secure-backend
+   kubectl exec -n secure-zone allowed-client -- curl -s -m 2 http://secure-backend:80
    ```
 
-   Muss sofort eine Antwort liefern.
-2. Teste die Blockade:
+   Muss sofort eine Antwort liefern (HTTP 200 / Nginx-HTML).
+2. Teste die Blockade aus der externen Zone:
 
    ```bash
-   kubectl exec -n external-zone blocked-client -- wget -qO- --timeout=2 http://secure-backend.secure-zone
+   kubectl exec -n external-zone blocked-client -- curl -s -m 2 http://secure-backend.secure-zone:80
    ```
 
-   Muss nach 2 Sekunden im Timeout scheitern.
+   Muss nach 2 Sekunden im Timeout scheitern (Exit-Code != 0).
 
 ---
 

@@ -42,29 +42,31 @@ Im Verzeichnis `/course/9/api-service/` liegt eine Kustomize-Struktur.
 
 ### Aufgabe 1: Base um HPA erweitern
 
-1. Erstelle in `base/` eine Datei `hpa.yaml`, die das Deployment
-   `api-deployment` skaliert:
+1. Erstelle in `/course/9/api-service/base/` eine Datei `hpa.yaml` namens
+   `api-hpa`, die das Deployment `api-service` skaliert:
    - `minReplicas`: 2
    - `maxReplicas`: 4
-   - Ziel: CPU-Auslastung 75%.
+   - Ziel: Durchschnittliche CPU-Auslastung 50% (`averageUtilization: 50`).
 2. Registriere `hpa.yaml` in `base/kustomization.yaml` unter `resources`.
 
 ### Aufgabe 2: Prod-Overlay mit Patch konfigurieren
 
-1. Erstelle in `prod/` eine Patch-Datei `hpa-patch.yaml`, die für das
-   HPA-Objekt `maxReplicas` auf **6** anhebt.
-2. Registriere den Patch in `prod/kustomization.yaml` unter `patchesStrategicMerge`
-   (oder `patches`).
+1. Erstelle in `/course/9/api-service/prod/` eine Patch-Datei `hpa-patch.yaml`,
+   die für das HPA-Objekt `api-hpa` `maxReplicas` auf **6** anhebt.
+2. Registriere den Patch in `prod/kustomization.yaml` (unter `patches:`).
 
 ### Aufgabe 3: Legacy-ConfigMap löschen & Overlays ausrollen
 
 1. Lösche die veraltete ConfigMap `legacy-scaling-config` aus beiden
-   Namespaces (`staging-zone` und `prod-zone`).
-2. Wende das Staging-Overlay an: `kubectl apply -k /course/9/api-service/base/`
-   im Namespace `staging-zone`.
-3. Wende das Prod-Overlay an: `kubectl apply -k /course/9/api-service/prod/`.
-4. Verifiziere mit `kubectl get hpa -A`, dass in `prod-zone` das Maximum von
-   6 Replicas aktiv ist.
+   Namespaces:
+   - `kubectl delete cm legacy-scaling-config -n staging-zone`
+   - `kubectl delete cm legacy-scaling-config -n prod-zone`
+2. Wende das Staging-Overlay an:
+   `kubectl apply -k /course/9/api-service/staging/`
+3. Wende das Prod-Overlay an:
+   `kubectl apply -k /course/9/api-service/prod/`
+4. Verifiziere mit `kubectl get hpa -A`, dass in `staging-zone` `maxReplicas=4`
+   und in `prod-zone` `maxReplicas=6` aktiv ist.
 
 ---
 

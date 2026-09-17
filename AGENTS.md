@@ -241,10 +241,13 @@ Szenarien folgende Prüfkriterien nachweislich erfüllen:
 4. **Vollständige Parität zu Killer.sh Subtasks:**
    Für jede Aufgabe muss im Vorfeld dargelegt werden, welchen Teilaspekten
    aus Simulation A oder B sie strukturell entspricht.
-5. **In-Cluster Validierungspflicht:**
-   Kein Szenario darf als fertig deklariert oder committed werden, bevor der
-   Agent das Setup-Skript im echten Cluster ausgeführt und die Lösung via
-   Test-Skript fehlerfrei verifiziert hat.
+5. **In-Cluster Validation & Task Solvability Guarantee (Inviolable):**
+   No lab or exam task may ever be presented to Herbert as ready until the
+   agent has executed the exact instructions in the live cluster, confirmed that
+   the manifest/commands solve the task with 100% PASS in the verification engine,
+   and subsequently reset the cluster back to the clean initial state. Every
+   field, label, namespace, and parameter in the task description must match
+   cluster reality 1:1 without logical discrepancies.
 6. **Copyright-Schutz:**
    Verbindliche Einhaltung eigener Bezeichner, Namespaces, CIDRs und
    Geschichten. Die strukturelle Denk- und Falltiefe bleibt 1:1 erhalten, der

@@ -47,20 +47,24 @@ Erstelle eine HTTPRoute namens `traffic-splitter` im Namespace
 1. `parentRefs`: Binde die Route an das Gateway `app-gateway`.
 2. `hostnames`: Beschränke den Zugriff auf `api.example.com`.
 3. Regel 1 (Pfad `/v1`):
-   - Leite Anfragen mit Präfix `/v1` an Service `v1-service` auf Port 80.
+   - Leite Anfragen mit Pfad-Präfix `/v1` an Service `web-v1-svc` auf Port
+     `8080`.
 4. Regel 2 (Pfad `/v2`):
-   - Leite Anfragen mit Präfix `/v2` an Service `v2-service` auf Port 80.
-5. Regel 3 (Header-Matching):
-   - Wenn der Header `x-client-type: mobile` gesetzt ist, leite den Request
-     unabhängig vom Pfad an `v2-service` auf Port 80 weiter.
+   - Leite Anfragen mit Pfad-Präfix `/v2` an Service `web-v2-svc` auf Port
+     `8080`.
+5. Regel 3 (Header-Routing für `/mobile`):
+   - Bei Pfad-Präfix `/mobile` mit Request-Header `User-Agent: mobile` (Exact):
+     Weiterleitung an Service `web-v2-svc` auf Port `8080`.
+   - Bei Pfad-Präfix `/mobile` ohne diesen Header (Fallback):
+     Weiterleitung an Service `web-v1-svc` auf Port `8080`.
 
-### Aufgabe 2: Verifikation via Curl
+### Aufgabe 2: Verifikation
 
-Teste die Weiterleitung mit `curl` gegen den Gateway-Endpunkt:
+Prüfe die Syntax und wende das Manifest an:
 
 ```bash
-curl -H "Host: api.example.com" http://<gateway-ip>/v1
-curl -H "Host: api.example.com" -H "x-client-type: mobile" http://<gateway-ip>/
+kubectl apply -f traffic-splitter.yaml
+kubectl get httproute traffic-splitter -n gateway-infra -o yaml
 ```
 
 ---

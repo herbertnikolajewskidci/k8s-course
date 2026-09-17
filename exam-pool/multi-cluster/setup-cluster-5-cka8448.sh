@@ -8,7 +8,10 @@ echo "=== Provisioning Cluster 5 (cka8448) ==="
 # Q5: Kubelet PKI
 mkdir -p /course/5/
 
-# Q8: NetworkPolicy
+# Q8: NetworkPolicy & Policy Controller
+if ! kubectl get daemonset kube-network-policies -n kube-system >/dev/null 2>&1; then
+  kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/kube-network-policies/main/install.yaml >/dev/null 2>&1 || true
+fi
 kubectl create ns secure-zone --dry-run=client -o yaml | kubectl apply -f -
 kubectl create ns external-zone --dry-run=client -o yaml | kubectl apply -f -
 

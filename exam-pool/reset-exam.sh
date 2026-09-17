@@ -229,8 +229,11 @@ ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 cka8448 bash << 'EOF' &
   # Q5: Purge certificate info txt
   rm -f /course/5/*.txt /course/5/*.log 2>/dev/null || true
 
-  # Q8: Delete NetworkPolicy
+  # Q8: Delete NetworkPolicy and ensure policy controller
   kubectl delete netpol backend-policy -n secure-zone --ignore-not-found=true >/dev/null 2>&1 || true
+  if ! kubectl get daemonset kube-network-policies -n kube-system >/dev/null 2>&1; then
+    kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/kube-network-policies/main/install.yaml >/dev/null 2>&1 || true
+  fi
 
   # Q14: Purge etcd backup files and test restore directories, ensure binaries
   rm -rf /course/14/backup/* /var/lib/etcd-restore/* 2>/dev/null || true
